@@ -1,0 +1,288 @@
+/* resources/css/frontend.css */
+
+/* Custom Variables */
+:root {
+    --color-primary-50: #eff6ff;
+    --color-primary-100: #dbeafe;
+    --color-primary-200: #bfdbfe;
+    --color-primary-300: #93c5fd;
+    --color-primary-400: #60a5fa;
+    --color-primary-500: #3b82f6;
+    --color-primary-600: #2563eb;
+    --color-primary-700: #1d4ed8;
+    --color-primary-800: #1e40af;
+    --color-primary-900: #1e3a8a;
+}
+
+/* Gradient Backgrounds */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-800) 100%);
+}
+
+.bg-gradient-light {
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+/* Custom Card Styles */
+.resource-card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600;
+}
+
+.resource-card:hover {
+    transform: translateY(-4px);
+}
+
+/* Badge Styles */
+.badge {
+    @apply px-2.5 py-1 text-xs font-medium rounded-full inline-flex items-center gap-1;
+}
+
+.badge-primary {
+    @apply bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300;
+}
+
+.badge-success {
+    @apply bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300;
+}
+
+.badge-warning {
+    @apply bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300;
+}
+
+.badge-danger {
+    @apply bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300;
+}
+
+.badge-purple {
+    @apply bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300;
+}
+
+.badge-gray {
+    @apply bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300;
+}
+
+/* Button Styles */
+.btn {
+    @apply px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 inline-flex items-center justify-center gap-2;
+}
+
+.btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white shadow-sm hover:shadow-md;
+}
+
+.btn-outline {
+    @apply border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700;
+}
+
+.btn-success {
+    @apply bg-green-600 hover:bg-green-700 text-white;
+}
+
+.btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white;
+}
+
+/* Filter Bar Styles */
+.filter-bar {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4;
+}
+
+.filter-select {
+    @apply px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition;
+}
+
+/* Search Input */
+.search-input {
+    @apply w-full px-4 py-3 pl-12 pr-4 text-gray-900 dark:text-white bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    @apply fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity z-50;
+}
+
+.modal-container {
+    @apply fixed inset-0 z-50 overflow-y-auto;
+}
+
+.modal-content {
+    @apply relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-4xl w-full mx-auto;
+}
+
+/* Price Tag */
+.price-tag {
+    @apply text-2xl font-bold text-gray-900 dark:text-white;
+}
+
+.price-old {
+    @apply ml-2 text-sm text-gray-500 line-through;
+}
+
+/* Resource Meta */
+.meta-item {
+    @apply flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400;
+}
+
+.meta-icon {
+    @apply w-4 h-4 text-gray-400;
+}
+
+/* Rating Stars */
+.star-rating {
+    @apply flex items-center gap-0.5;
+}
+
+.star-filled {
+    @apply w-4 h-4 text-yellow-400 fill-current;
+}
+
+.star-empty {
+    @apply w-4 h-4 text-gray-300 dark:text-gray-600;
+}
+
+/* Skeleton Loading */
+.skeleton {
+    @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded;
+}
+
+/* Hero Section */
+.hero-section {
+    @apply bg-gradient-primary rounded-2xl p-8 md:p-12 text-white;
+}
+
+/* Feature Cards */
+.feature-card {
+    @apply bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition;
+}
+
+/* Responsive Grid */
+.resource-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+}
+
+/* Category Tree */
+.category-tree {
+    @apply space-y-1;
+}
+
+.category-item {
+    @apply flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition;
+}
+
+.category-item.active {
+    @apply bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    @apply flex items-center space-x-2 text-sm;
+}
+
+.breadcrumb-item {
+    @apply text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300;
+}
+
+.breadcrumb-item.active {
+    @apply text-gray-900 dark:text-white font-medium;
+}
+
+/* Pagination */
+.pagination {
+    @apply flex items-center justify-center space-x-2;
+}
+
+.pagination-item {
+    @apply px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition;
+}
+
+.pagination-item.active {
+    @apply bg-primary-600 text-white hover:bg-primary-700;
+}
+
+/* Download Card */
+.download-card {
+    @apply flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600;
+}
+
+/* File Icon */
+.file-icon {
+    @apply w-10 h-10 flex items-center justify-center rounded-lg;
+}
+
+.file-icon-pdf {
+    @apply bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400;
+}
+
+.file-icon-word {
+    @apply bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400;
+}
+
+.file-icon-excel {
+    @apply bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400;
+}
+
+.file-icon-image {
+    @apply bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400;
+}
+
+/* Dark Mode Adjustments */
+.dark .hero-section {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e1e3a 100%);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* resources/css/frontend.css - Add these animations */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes spin-slow {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 2s linear infinite;
+}
+
+.delay-100 {
+    animation-delay: 100ms;
+}
+
+.delay-200 {
+    animation-delay: 200ms;
+}
