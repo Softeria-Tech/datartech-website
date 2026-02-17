@@ -346,7 +346,7 @@ class ResourceResource extends FilamentResource
                                             
                                         Forms\Components\Placeholder::make('revenue')
                                             ->label('Total Revenue')
-                                            ->content(fn ($record): string => '$' . number_format($record->orders()->sum('total') ?? 0, 2)),
+                                            ->content(fn ($record): string => 'Ksh' . number_format($record->orders()->sum('total') ?? 0, 2)),
                                     ]),
                             ]),
                     ])

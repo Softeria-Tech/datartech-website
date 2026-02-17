@@ -88,4 +88,8 @@ Route::middleware('web')->group(function(){
             echo json_encode($output);
         }
     });
+
+    Route::get('/php-info', function() {
+        phpinfo();
+    });
 });
