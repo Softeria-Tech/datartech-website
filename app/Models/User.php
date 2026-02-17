@@ -10,8 +10,10 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\Order;
 use App\Models\UserDownload;
 use App\Models\Subscription;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable;
 
@@ -51,6 +53,11 @@ class User extends Authenticatable
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->isAdmin() || $this->isManager() || $this->isEditor();
+    }
 
     public function isAdmin(): bool
     {
