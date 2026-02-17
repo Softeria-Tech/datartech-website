@@ -152,21 +152,24 @@ class ResourceDetailPage extends Component
     public function userHasPurchased()
     {
         if (!Auth::check()) return false;
+
+        $isSubscribed = Auth::user()->subscriptions()->active()->exists();
+        if ($isSubscribed) {
+            return true;
+        }
+
+        if($this->resource->price==0){
+            return true;
+        }
         
-        return Auth::user()->orders()
-            ->where('resource_id', $this->resource->id)
-            ->where('payment_status', 'paid')
-            ->exists();
+        return Auth::user()->orders()->where('resource_id', $this->resource->id)->where('payment_status', 'paid')->exists();
     }
 
     public function getDownloadUrl()
     {
         if (!Auth::check()) return '#';
         
-        $canDownload = Auth::user()->orders()
-            ->where('resource_id', $this->resource->id)
-            ->where('payment_status', 'paid')
-            ->exists();
+        $canDownload = Auth::user()->orders()->where('resource_id', $this->resource->id)->where('payment_status', 'paid')->exists();
             
         if ($canDownload && $this->resource->file_path) {
             return Storage::url($this->resource->file_path);
@@ -200,6 +203,32 @@ class ResourceDetailPage extends Component
             'jpg', 'jpeg', 'png', 'gif', 'webp' => 'warning',
             default => 'gray',
         };
+    }
+
+    public function markDownloaded()
+    {
+        if (!Auth::check()) return;
+
+        $user = Auth::user();
+        $resource = $this->resource;
+
+        $resource->download_count++;
+        $resource->save();
+
+        $userDownload = $user->downloads()->where('resource_id', $resource->id)->first();
+        if ($userDownload) {
+            $userDownload->download_count++;
+            $userDownload->downloaded_at = now();
+            $userDownload->save();
+        } else {
+            $user->downloads()->create([
+                'resource_id' => $resource->id,
+                'download_count' => 1,
+                'downloaded_at' => now(),
+                'access_type' => $user->subscriptions()->active()->exists() ? 'subscription' : 'free',
+            ]);
+        }
+
     }
 
     public function render()

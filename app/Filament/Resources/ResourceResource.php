@@ -95,12 +95,7 @@ class ResourceResource extends FilamentResource
                                         Forms\Components\Select::make('language')
                                             ->options([
                                                 'en' => 'English',
-                                                'es' => 'Spanish',
-                                                'fr' => 'French',
-                                                'de' => 'German',
-                                                'zh' => 'Chinese',
-                                                'ar' => 'Arabic',
-                                                'hi' => 'Hindi',
+                                                'sw' => 'Swahili',
                                             ])
                                             ->default('en')
                                             ->required(),
@@ -151,7 +146,6 @@ class ResourceResource extends FilamentResource
                                     ->columns(2)
                                     ->schema([
                                         Forms\Components\TextInput::make('price')
-                                            ->required()
                                             ->numeric()
                                             ->prefix('Ksh ')
                                             ->default(0.00)
@@ -386,8 +380,15 @@ class ResourceResource extends FilamentResource
                     ),
                     
                 Tables\Columns\TextColumn::make('price')
-                    ->money('Ksh')
-                    ->sortable(),
+                    ->formatStateUsing(function ($state) {
+                        if (!$state || $state == 0) {
+                            return 'Free';
+                        }
+                        return 'Ksh ' . number_format($state, 0);
+                    })
+                    ->sortable()
+                    ->color(fn ($state) => (!$state || $state == 0) ? 'success' : 'primary')
+                    ->weight(fn ($state) => (!$state || $state == 0) ? 'bold' : 'normal'),
                     
                 Tables\Columns\IconColumn::make('requires_subscription')
                     ->label('Sub Only')
@@ -401,7 +402,7 @@ class ResourceResource extends FilamentResource
                     ->numeric(),
                     
                 Tables\Columns\IconColumn::make('is_published')
-                    ->label('Status')
+                    ->label('published')
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
@@ -470,8 +471,7 @@ class ResourceResource extends FilamentResource
                 SelectFilter::make('language')
                     ->options([
                         'en' => 'English',
-                        'es' => 'Spanish',
-                        'fr' => 'French',
+                        'sw' => 'Swahili',
                     ]),
             ])
             ->actions([
@@ -479,6 +479,12 @@ class ResourceResource extends FilamentResource
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\Action::make('togglePublish')
+                        ->label(fn ($record): string => $record->is_published ? 'Unpublish' : 'Publish')
+                        ->icon(fn ($record): string => $record->is_published ? 'heroicon-o-eye-slash' : 'heroicon-o-eye')
+                        ->color(fn ($record): string => $record->is_published ? 'warning' : 'success')
+                        ->action(fn ($record) => $record->update(['is_published' => !$record->is_published]))
+                        ->requiresConfirmation(),
                 ])
                 ->label('Actions')
                 ->icon('heroicon-o-chevron-down')

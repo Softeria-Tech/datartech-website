@@ -184,11 +184,17 @@ class ResourcesPage extends Component
     public function userHasPurchased($resourceId)
     {
         if (!Auth::check()) return false;
+
+        if ($this->userHasSubscription()) {
+            return true;
+        }
+
+        $resource = Resource::find($resourceId);
+        if($resource->price==0){//free resource, allow download without purchase
+            return true;
+        }
         
-        return Auth::user()->orders()
-            ->where('resource_id', $resourceId)
-            ->where('payment_status', 'paid')
-            ->exists();
+        return Auth::user()->orders() ->where('resource_id', $resourceId) ->where('payment_status', 'paid') ->exists();
     }
 
     // Check if user has active subscription
@@ -274,17 +280,17 @@ class ResourcesPage extends Component
                 case 'free':
                     $query->where('price', 0);
                     break;
-                case 'under10':
-                    $query->where('price', '<', 10);
+                case 'under50':
+                    $query->where('price', '<', 50);
                     break;
-                case '10to25':
-                    $query->whereBetween('price', [10, 25]);
+                case '50to100':
+                    $query->whereBetween('price', [50, 100]);
                     break;
-                case '25to50':
-                    $query->whereBetween('price', [25, 50]);
+                case '100to250':
+                    $query->whereBetween('price', [100, 250]);
                     break;
-                case 'over50':
-                    $query->where('price', '>', 50);
+                case 'over250':
+                    $query->where('price', '>', 250);
                     break;
             }
         }

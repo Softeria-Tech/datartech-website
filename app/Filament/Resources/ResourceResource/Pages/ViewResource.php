@@ -26,7 +26,15 @@ class ViewResource extends ViewRecord
                                 TextEntry::make('title'),
                                 TextEntry::make('slug'),
                                 TextEntry::make('category.name'),
-                                TextEntry::make('price')->money('Ksh'),
+                                TextEntry::make('price')
+                                    ->formatStateUsing(function ($state) {
+                                        if (!$state || $state == 0) {
+                                            return 'Free';
+                                        }
+                                        return 'Ksh ' . number_format($state, 0);
+                                    })
+                                    ->color(fn ($state) => (!$state || $state == 0) ? 'success' : 'primary')
+                                    ->weight(fn ($state) => (!$state || $state == 0) ? 'bold' : 'normal'),
                                 TextEntry::make('discount_price')->money('Ksh'),
                                 TextEntry::make('requires_subscription')
                                     ->badge()

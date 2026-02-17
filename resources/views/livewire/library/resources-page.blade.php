@@ -52,14 +52,13 @@
                 {{-- Price Filter --}}
                 <select
                     wire:model.live="selectedPrice"
-                    class="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-primary-500"
-                >
+                    class="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-primary-500">
                     <option value="">All Prices</option>
                     <option value="free">Free</option>
-                    <option value="under10">Under Ksh10</option>
-                    <option value="10to25">Ksh10 - Ksh25</option>
-                    <option value="25to50">Ksh25 - Ksh50</option>
-                    <option value="over50">Over Ksh50</option>
+                    <option value="under50">Under Ksh50</option>
+                    <option value="50to100">Ksh50 - Ksh100</option>
+                    <option value="100to250">Ksh100 - Ksh250</option>
+                    <option value="over250">Over Ksh250</option>
                 </select>
 
                 {{-- Subscription Toggle --}}
@@ -168,7 +167,11 @@
 
                     <div class="flex items-center justify-between">
                         <div>
-                            @if($resource->discount_price && $resource->discount_ends_at?->isFuture())
+                            @if($resource->price==0)
+                                <span class="text-2xl font-bold text-green-600 dark:text-green-400">
+                                    Free
+                                </span>
+                            @elseif($resource->discount_price && $resource->discount_ends_at?->isFuture())
                                 <span class="text-2xl font-bold text-gray-900 dark:text-white">
                                     Ksh{{ number_format($resource->discount_price, 0) }}
                                 </span>
@@ -183,32 +186,30 @@
                         </div>
 
                         <div class="flex gap-2" >
+                            @if ($resource->price > 0 )
                             <button wire:click="previewResourceItem('{{ $resource->slug }}')"
                                     class="p-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
-                            </button>
-
+                            </button>                                
+                            @endif
+                            
                             @auth
                                 @if($this->userHasPurchased($resource->id))
-                                    <a href="{{ $this->getDownloadUrl($resource->id) }}" 
-                                       download
-                                       class="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition">
+                                    <a href="{{ route('library.resource.detail', $resource->slug) }}" class="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                         </svg>
                                     </a>
                                 @else
-                                    <button wire:click="initiatePurchase('{{ $resource->slug }}')"
-                                            class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                                    <button wire:click="initiatePurchase('{{ $resource->slug }}')" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
                                         Buy
                                     </button>
                                 @endif
                             @else
-                                <a href="{{ route('login', ['redirect' => route('library.resources')]) }}"
-                                   class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition">
+                                <a href="{{ route('login', ['redirect' => route('library.resources')]) }}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition">
                                      Buy
                                 </a>
                             @endauth

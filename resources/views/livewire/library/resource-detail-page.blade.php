@@ -106,10 +106,7 @@
                                 $icon = $fileTypeIcon;
                                 $color = $fileTypeColor;
                             @endphp
-                            <x-filament::icon 
-                                :icon="$icon" 
-                                class="w-8 h-8 text-{{ $color }}-600 dark:text-{{ $color }}-400" 
-                            />
+                            <x-filament::icon :icon="$icon" class="w-8 h-8 text-{{ $color }}-600 dark:text-{{ $color }}-400" />
                         </div>
                         <div>
                             <h3 class="font-medium text-gray-900 dark:text-white">
@@ -209,7 +206,9 @@
                 
                 {{-- Price --}}
                 <div class="text-center pb-6 border-b border-gray-200 dark:border-gray-700">
-                    @if($resource->discount_price && $resource->discount_ends_at?->isFuture())
+                    @if ($resource->price==0)
+                        <span class="text-3xl font-bold text-green-600 dark:text-green-400">Free</span>
+                    @elseif($resource->discount_price && $resource->discount_ends_at?->isFuture())
                         <div class="flex items-center justify-center gap-2 mb-2">
                             <span class="text-3xl font-bold text-gray-900 dark:text-white">
                                 Ksh{{ number_format($resource->discount_price, 0) }}
@@ -242,7 +241,7 @@
                                     </svg>
                                     <span class="font-medium">You own this resource</span>
                                 </div>
-                                <a href="{{ $downloadUrl }}" download
+                                <a wire:click="markDownloaded" href="{{ $downloadUrl }}" download
                                    class="block w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white text-center font-medium rounded-lg transition">
                                     Download Now
                                 </a>
