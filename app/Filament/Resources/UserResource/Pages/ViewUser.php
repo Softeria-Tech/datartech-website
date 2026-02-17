@@ -14,7 +14,7 @@ class ViewUser extends ViewRecord
     {
         return [
             Actions\EditAction::make(),
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()->hidden(fn () => auth()->id() === $this->record->id),
             Actions\Action::make('impersonate')
                 ->label('Login as User')
                 ->icon('heroicon-o-key')

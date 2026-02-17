@@ -106,5 +106,9 @@ class User extends Authenticatable implements FilamentUser
             ->latest();
     }
 
+    public function downloads_usage()
+    {
+        return $this->downloads()->sum('download_count');
+    }
     
 }

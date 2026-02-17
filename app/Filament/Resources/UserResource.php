@@ -26,6 +26,7 @@ use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\Grid as InfolistGrid;
+use Filament\Infolists\Components\ImageEntry;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -309,7 +310,7 @@ class UserResource extends Resource
                 ImageColumn::make('avatar')
                     ->label('')
                     ->circular()
-                    ->defaultImageUrl(url('/images/default-avatar.png'))
+                    ->defaultImageUrl(url('/assets/frontend/images/default-avatar.jpg'))
                     ->size(40),
                 
                 TextColumn::make('name')
@@ -443,6 +444,7 @@ class UserResource extends Resource
                     ->searchable(),
             ])
             ->actions([
+                Tables\Actions\ActionGroup::make([
                 Tables\Actions\ViewAction::make()
                     ->label('View'),
                 Tables\Actions\EditAction::make()
@@ -451,7 +453,8 @@ class UserResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading('Delete User')
                     ->modalDescription('Are you sure you want to delete this user? This action cannot be undone.')
-                    ->modalSubmitActionLabel('Yes, delete user'),
+                    ->modalSubmitActionLabel('Yes, delete user')
+                    ->hidden(fn ($record) => auth()->id() === $record->id),
                 Tables\Actions\Action::make('verify_email')
                     ->label('Verify Email')
                     ->icon('heroicon-o-check-badge')
@@ -470,7 +473,12 @@ class UserResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading('Impersonate User')
                     ->modalDescription('You will be logged in as this user. To return, log out and log back in as admin.')
-                    ->modalSubmitActionLabel('Yes, impersonate'),
+                    ->modalSubmitActionLabel('Yes, impersonate')
+                ])
+                ->label('Actions')
+                ->icon('heroicon-o-chevron-down')
+                ->color('primary')
+                ->button(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -519,26 +527,181 @@ class UserResource extends Resource
     {
         return $infolist
             ->schema([
-                InfolistSection::make('Subscription Overview')
+                // User Profile Header Section
+                InfolistSection::make('User Profile')
                     ->schema([
                         InfolistGrid::make(3)
                             ->schema([
-                                TextEntry::make('user.name')
-                                    ->label('Customer')
-                                    ->weight('bold')
-                                    ->url(fn ($record) => route('filament.admin.resources.users.view', $record->user))
+                                // Avatar/Image placeholder if you have avatar field
+                                ImageEntry::make('avatar')
+                                    ->label('')
+                                    ->circular()
+                                    ->size(100)
+                                    ->defaultImageUrl(url('https://ui-avatars.com/api/?name=' . urlencode($infolist->getRecord()->name) . '&color=7F9CF5&background=EBF4FF'))
+                                    ->columnSpan(1),
+                                
+                                // Basic info in a grid
+                                InfolistGrid::make(2)
+                                    ->schema([
+                                        TextEntry::make('name')
+                                            ->label('Full Name')
+                                            ->weight('bold')
+                                            ->size(TextEntry\TextEntrySize::Large),
+                                        
+                                        TextEntry::make('email')
+                                            ->label('Email Address')
+                                            ->copyable()
+                                            ->copyMessage('Email address copied')
+                                            ->icon('heroicon-m-envelope'),
+                                        
+                                        TextEntry::make('role')
+                                            ->label('Role')
+                                            ->badge()
+                                            ->color(fn (string $state): string => match ($state) {
+                                                'admin' => 'danger',
+                                                'manager' => 'warning',
+                                                'editor' => 'info',
+                                                'customer' => 'success',
+                                                default => 'gray',
+                                            })
+                                            ->formatStateUsing(fn (string $state): string => ucfirst($state)),
+                                        
+                                        IconEntry::make('is_active')
+                                            ->label('Account Status')
+                                            ->boolean()
+                                            ->trueIcon('heroicon-o-check-circle')
+                                            ->falseIcon('heroicon-o-x-circle')
+                                            ->trueColor('success')
+                                            ->falseColor('danger'),
+                                    ])
+                                    ->columnSpan(2),
+                            ]),
+                    ]),
+                
+                // Personal Information Section
+                InfolistSection::make('Personal Information')
+                    ->schema([
+                        InfolistGrid::make(2)
+                            ->schema([
+                                TextEntry::make('phone')
+                                    ->label('Phone Number')
+                                    ->icon('heroicon-m-phone')
+                                    ->placeholder('Not provided')
+                                    ->url(fn ($state) => $state ? 'tel:' . $state : null)
                                     ->color('primary'),
                                 
-                                TextEntry::make('name')
-                                    ->label('Subscription')
-                                    ->weight('bold'),
+                                TextEntry::make('company')
+                                    ->label('Company')
+                                    ->icon('heroicon-m-building-office')
+                                    ->placeholder('Not provided'),
                                 
-                                TextEntry::make('price')
-                                    ->label('Price')
-                                    ->money('USD')
-                                    ->weight('bold'),
+                                TextEntry::make('job_title')
+                                    ->label('Job Title')
+                                    ->icon('heroicon-m-briefcase')
+                                    ->placeholder('Not provided'),
                                 
-                                TextEntry::make('plan')
+                                TextEntry::make('bio')
+                                    ->label('Bio')
+                                    ->markdown()
+                                    ->placeholder('No bio provided')
+                                    ->columnSpanFull(),
+                            ]),
+                    ]),
+                
+                // Location Information Section
+                InfolistSection::make('Location')
+                    ->schema([
+                        InfolistGrid::make(3)
+                            ->schema([
+                                TextEntry::make('address')
+                                    ->label('Street Address')
+                                    ->placeholder('Not provided'),
+                                
+                                TextEntry::make('city')
+                                    ->label('City')
+                                    ->placeholder('Not provided'),
+                                
+                                TextEntry::make('state')
+                                    ->label('State/Province')
+                                    ->placeholder('Not provided'),
+                                
+                                TextEntry::make('zip_code')
+                                    ->label('ZIP/Postal Code')
+                                    ->placeholder('Not provided'),
+                                
+                                TextEntry::make('country')
+                                    ->label('Country')
+                                    ->placeholder('Not provided')
+                                    ->formatStateUsing(fn ($state) => $state ?: 'Not provided'),
+                            ]),
+                    ]),
+                
+                // Preferences Section
+                InfolistSection::make('Preferences & Settings')
+                    ->schema([
+                        InfolistGrid::make(2)
+                            ->schema([
+                                TextEntry::make('language')
+                                    ->label('Language')
+                                    ->badge()
+                                    ->color('info')
+                                    ->formatStateUsing(fn ($state) => $state ? ucfirst($state) : 'English (default)'),
+                                
+                                TextEntry::make('timezone')
+                                    ->label('Timezone')
+                                    ->badge()
+                                    ->color('info')
+                                    ->formatStateUsing(fn ($state) => $state ?: 'UTC (default)'),
+                                
+                                IconEntry::make('marketing_emails')
+                                    ->label('Marketing Emails')
+                                    ->boolean()
+                                    ->trueIcon('heroicon-o-check-circle')
+                                    ->falseIcon('heroicon-o-x-circle')
+                                    ->trueColor('success')
+                                    ->falseColor('danger'),
+                            ]),
+                    ]),
+                
+                // Account Statistics Section
+                InfolistSection::make('Account Statistics')
+                    ->schema([
+                        InfolistGrid::make(3)
+                            ->schema([
+                                TextEntry::make('orders_count')
+                                    ->label('Total Orders')
+                                    ->state(fn ($record): int => $record->orders()->count())
+                                    ->numeric()
+                                    ->badge()
+                                    ->color('primary')
+                                    ->icon('heroicon-m-shopping-cart'),
+                                
+                                TextEntry::make('downloads_count')
+                                    ->label('Total Downloads')
+                                    ->state(fn ($record): int => $record->downloads()->count())
+                                    ->numeric()
+                                    ->badge()
+                                    ->color('success')
+                                    ->icon('heroicon-m-arrow-down-tray'),
+                                
+                                TextEntry::make('active_subscription')
+                                    ->label('Active Subscription')
+                                    ->state(fn ($record): string => $record->activeSubscription()->exists() ? 'Yes' : 'No')
+                                    ->badge()
+                                    ->color(fn ($state): string => $state === 'Yes' ? 'success' : 'danger'),
+                            ]),
+                    ]),
+                
+                // Subscription Details Section (if exists)
+                InfolistSection::make('Current Subscription')
+                    ->schema([
+                        InfolistGrid::make(2)
+                            ->schema([
+                                TextEntry::make('activeSubscription.name')
+                                    ->label('Plan Name')
+                                    ->placeholder('No active subscription'),
+                                
+                                TextEntry::make('activeSubscription.plan')
                                     ->label('Billing Plan')
                                     ->badge()
                                     ->color(fn (string $state): string => match ($state) {
@@ -549,160 +712,48 @@ class UserResource extends Resource
                                         default => 'gray',
                                     }),
                                 
-                                IconEntry::make('isActive')
-                                    ->label('Status')
-                                    ->boolean()
-                                    ->trueIcon('heroicon-o-check-circle')
-                                    ->falseIcon('heroicon-o-x-circle')
-                                    ->trueColor('success')
-                                    ->falseColor('danger')
-                                    ->getStateUsing(fn ($record) => $record->isActive()),
-                                
-                                TextEntry::make('order_id')
-                                    ->label('Order ID')
-                                    ->copyable()
-                                    ->copyMessage('Order ID copied')
-                                    ->placeholder('Not specified'),
-                            ]),
-                    ]),
-                
-                InfolistSection::make('Customer Information')
-                    ->schema([
-                        InfolistGrid::make(2)
-                            ->schema([
-                                TextEntry::make('user.email')
-                                    ->label('Email')
-                                    ->copyable()
-                                    ->copyMessage('Email copied'),
-                                TextEntry::make('user.created_at')
-                                    ->label('Customer Since')
-                                    ->date('M d, Y'),
-                            ]),
-                    ]),
-                
-                InfolistSection::make('Subscription Dates')
-                    ->schema([
-                        InfolistGrid::make(3)
-                            ->schema([
-                                TextEntry::make('starts_at')
+                                TextEntry::make('activeSubscription.starts_at')
                                     ->label('Started')
-                                    ->dateTime('M d, Y - g:i A')
-                                    ->badge()
-                                    ->color('success'),
+                                    ->dateTime('M d, Y')
+                                    ->placeholder('N/A'),
                                 
-                                TextEntry::make('trial_ends_at')
-                                    ->label('Trial Ends')
-                                    ->dateTime('M d, Y - g:i A')
-                                    ->placeholder('No trial')
-                                    ->badge()
-                                    ->color('warning')
-                                    ->visible(fn ($record) => $record->trial_ends_at),
-                                
-                                TextEntry::make('ends_at')
+                                TextEntry::make('activeSubscription.ends_at')
                                     ->label('Expires')
-                                    ->dateTime('M d, Y - g:i A')
-                                    ->placeholder('Never')
-                                    ->badge()
-                                    ->color(fn ($record) => 
-                                        $record->ends_at && $record->ends_at->isPast() 
-                                            ? 'danger' 
-                                            : 'gray'
-                                    ),
-                                
-                                TextEntry::make('next_billing_at')
-                                    ->label('Next Billing')
-                                    ->dateTime('M d, Y - g:i A')
-                                    ->placeholder('N/A')
-                                    ->visible(fn ($record) => $record->next_billing_at),
-                                
-                                TextEntry::make('cancelled_at')
-                                    ->label('Cancelled')
-                                    ->dateTime('M d, Y - g:i A')
-                                    ->placeholder('Not cancelled')
-                                    ->badge()
-                                    ->color('danger')
-                                    ->visible(fn ($record) => $record->cancelled_at),
-                            ]),
-                    ]),
-                
-                InfolistSection::make('Membership Package')
-                    ->schema([
-                        InfolistGrid::make(2)
-                            ->schema([
-                                TextEntry::make('membershipPackage.name')
-                                    ->label('Package')
-                                    ->weight('bold')
-                                    ->url(fn ($record) => $record->membershipPackage 
-                                        ? route('filament.admin.resources.membership-packages.view', $record->membershipPackage)
-                                        : null
-                                    )
-                                    ->color('primary'),
-                                
-                                TextEntry::make('membershipPackage.description')
-                                    ->label('Description')
-                                    ->limit(100),
-                                
-                                TextEntry::make('membershipPackage.download_limit_per_month')
-                                    ->label('Package Limit')
-                                    ->formatStateUsing(fn ($state) => $state ? "{$state}/month" : 'Unlimited'),
+                                    ->dateTime('M d, Y')
+                                    ->placeholder('Never'),
                             ]),
                     ])
-                    ->visible(fn ($record) => $record->membershipPackage),
+                    ->visible(fn ($record): bool => $record->activeSubscription()->exists()),
                 
-                InfolistSection::make('Download Usage')
-                    ->schema([
-                        InfolistGrid::make(3)
-                            ->schema([
-                                TextEntry::make('downloads_used')
-                                    ->label('Downloads Used')
-                                    ->numeric()
-                                    ->badge()
-                                    ->color(fn ($record) => 
-                                        $record->download_limit && $record->downloads_used >= $record->download_limit 
-                                            ? 'danger' 
-                                            : 'warning'
-                                    ),
-                                
-                                TextEntry::make('download_limit')
-                                    ->label('Download Limit')
-                                    ->formatStateUsing(fn ($state) => $state ?? 'Unlimited')
-                                    ->badge()
-                                    ->color('info'),
-                                
-                                TextEntry::make('remainingDownloads')
-                                    ->label('Remaining')
-                                    ->getStateUsing(fn ($record) => $record->remainingDownloads() ?? 'Unlimited')
-                                    ->badge()
-                                    ->color(fn ($record) => 
-                                        $record->download_limit && $record->remainingDownloads() <= 5 
-                                            ? 'danger' 
-                                            : 'success'
-                                    ),
-                            ]),
-                    ]),
-                
-                InfolistSection::make('Additional Notes')
-                    ->schema([
-                        TextEntry::make('metadata')
-                            ->label('Notes')
-                            ->markdown()
-                            ->placeholder('No additional notes')
-                            ->columnSpanFull(),
-                    ])
-                    ->visible(fn ($record) => !empty($record->metadata)),
-                
+                // System Information Section
                 InfolistSection::make('System Information')
                     ->schema([
                         InfolistGrid::make(2)
                             ->schema([
+                                TextEntry::make('email_verified_at')
+                                    ->label('Email Verified')
+                                    ->dateTime('M d, Y - g:i A')
+                                    ->badge()
+                                    ->color(fn ($state) => $state ? 'success' : 'danger')
+                                    ->formatStateUsing(fn ($state) => $state ? 'Verified' : 'Unverified'),
+                                
+                                TextEntry::make('last_login_at')
+                                    ->label('Last Login')
+                                    ->dateTime('M d, Y - g:i A')
+                                    ->placeholder('Never logged in'),
+                                
                                 TextEntry::make('created_at')
-                                    ->label('Created')
-                                    ->dateTime('M d, Y - g:i A'),
+                                    ->label('Account Created')
+                                    ->dateTime('M d, Y - g:i A')
+                                    ->since(),
+                                
                                 TextEntry::make('updated_at')
                                     ->label('Last Updated')
-                                    ->dateTime('M d, Y - g:i A'),
+                                    ->dateTime('M d, Y - g:i A')
+                                    ->since(),
+                                
                                 TextEntry::make('deleted_at')
-                                    ->label('Deleted')
+                                    ->label('Deleted At')
                                     ->dateTime('M d, Y - g:i A')
                                     ->badge()
                                     ->color('danger')
