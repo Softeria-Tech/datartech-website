@@ -208,7 +208,7 @@ class ResourceResource extends FilamentResource
                                             ->label('Main File (Full Version)')
                                             ->directory('resources/full')
                                             ->acceptedFileTypes(['application/pdf', 'application/zip', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/epub+zip'])
-                                            ->maxSize(10240) // 10MB in KB
+                                            ->maxSize(51200) // 50MB in KB
                                             ->afterStateUpdated(function ($state, Set $set, $record) {
                                                 if ($state) {
                                                     $set('file_name', $state->getClientOriginalName());
