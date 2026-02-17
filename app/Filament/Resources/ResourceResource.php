@@ -367,7 +367,7 @@ class ResourceResource extends FilamentResource
                 Tables\Columns\ImageColumn::make('thumbnail')
                     ->label('Image')
                     ->circular()
-                    ->defaultImageUrl(url('/images/default-resource.png')),
+                    ->defaultImageUrl(url('/assets/frontend/images/default-resource.png')),
                     
                 Tables\Columns\TextColumn::make('title')
                     ->searchable()

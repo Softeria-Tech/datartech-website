@@ -70,7 +70,7 @@ class CategoryResource extends Resource
                         
                         Select::make('parent_id')
                             ->label('Parent Category')
-                            ->placeholder('None (Root Category)')
+                            ->placeholder('None (Parent)')
                             ->relationship('parent', 'name', fn (Builder $query) => 
                                 $query->whereNull('parent_id')->orderBy('name')
                             )
@@ -191,7 +191,7 @@ class CategoryResource extends Resource
                 ImageColumn::make('thumbnail')
                     ->label('')
                     ->circular()
-                    ->defaultImageUrl(url('/images/default-category.png'))
+                    ->defaultImageUrl(url('/assets/frontend/images/default-category.png'))
                     ->size(40),
                 
                 TextColumn::make('name')
@@ -206,7 +206,7 @@ class CategoryResource extends Resource
                     ->label('Parent')
                     ->searchable()
                     ->sortable()
-                    ->placeholder('Root Category')
+                    ->placeholder('Parent')
                     ->badge()
                     ->color('gray')
                     ->toggleable(),

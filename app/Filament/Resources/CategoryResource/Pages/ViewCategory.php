@@ -61,12 +61,12 @@ class ViewCategory extends ViewRecord
                                     ->label('Thumbnail')
                                     ->width(150)
                                     ->height(150)
-                                    ->defaultImageUrl(url('/images/default-category.png')),
+                                    ->defaultImageUrl(url('/assets/frontend/images/default-category.png')),
                                 ImageEntry::make('cover_image')
                                     ->label('Cover Image')
                                     ->width(300)
                                     ->height(100)
-                                    ->defaultImageUrl(url('/images/default-cover.png')),
+                                    ->defaultImageUrl(url('/assets/frontend/images/default-category.png')),
                             ]),
                     ])
                     ->visible(fn ($record) => $record->thumbnail || $record->cover_image),
