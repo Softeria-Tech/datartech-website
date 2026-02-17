@@ -67,13 +67,25 @@ Route::middleware('web')->group(function(){
     require __DIR__ . '/auth.php';
 
     Route::get('artisan',function(){
-        Artisan::call('config:clear');
-        Artisan::call('view:clear');
-        Artisan::call('cache:clear');
-        Artisan::call('migrate');
-        exec('composer dump-autoload -d ' . base_path(), $output, $returnValue);
-        //exec('ln -s ../public_html public',$output, $returnValue);
-        echo "Artisan commands executed successfully.\n<br>";
-        echo json_encode($output);
+        if(!empty($_GET['cmd'])){
+            $cmd = $_GET['cmd'];
+            Artisan::call($cmd);
+            echo "Command '$cmd' executed successfully.\n<br>";
+            echo nl2br(Artisan::output());
+        } else {
+            Artisan::call('config:clear');
+            echo nl2br(Artisan::output());
+            Artisan::call('view:clear');
+            echo nl2br(Artisan::output());
+            Artisan::call('cache:clear');
+            echo nl2br(Artisan::output());
+            Artisan::call('migrate');
+            echo nl2br(Artisan::output());
+            exec('composer dump-autoload -d ' . base_path(), $output, $returnValue);
+            //exec('ln -s ../public_html public',$output, $returnValue);        
+            echo "Artisan commands executed successfully.\n<br>";
+            echo json_encode($output);
+            echo json_encode($output);
+        }
     });
 });
