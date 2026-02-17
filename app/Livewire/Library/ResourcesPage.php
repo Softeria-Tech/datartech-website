@@ -95,10 +95,10 @@ class ResourcesPage extends Component
         // Get preview file URL
         if ($this->previewResource->preview_file_path) {
             $this->previewFileUrl = Storage::url($this->previewResource->preview_file_path);
-        } elseif ($this->previewResource->file_path && $this->previewResource->delivery_type === 'upload') {
+        }/* elseif ($this->previewResource->file_path && $this->previewResource->delivery_type === 'upload') {
             // If no preview file, use the main file but we'll show limited preview
             $this->previewFileUrl = Storage::url($this->previewResource->file_path);
-        }
+        }*/
         
         $this->showPreviewModal = true;
     }

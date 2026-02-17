@@ -82,9 +82,9 @@ class ResourceDetailPage extends Component
         // Get preview file URL
         if ($this->resource->preview_file_path) {
             $this->previewFileUrl = Storage::url($this->resource->preview_file_path);
-        } elseif ($this->resource->file_path && $this->resource->delivery_type === 'upload') {
+        }/* elseif ($this->resource->file_path && $this->resource->delivery_type === 'upload') {
             $this->previewFileUrl = Storage::url($this->resource->file_path);
-        }
+        }*/
         
         $this->showPreviewModal = true;
     }
@@ -169,7 +169,7 @@ class ResourceDetailPage extends Component
     {
         if (!Auth::check()) return '#';
         
-        $canDownload = Auth::user()->orders()->where('resource_id', $this->resource->id)->where('payment_status', 'paid')->exists();
+        $canDownload = $this->userHasPurchased();
             
         if ($canDownload && $this->resource->file_path) {
             return Storage::url($this->resource->file_path);

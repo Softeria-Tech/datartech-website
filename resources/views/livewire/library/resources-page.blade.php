@@ -210,7 +210,7 @@
                                 @endif
                             @else
                                 <a href="{{ route('login', ['redirect' => route('library.resources')]) }}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition">
-                                     Buy
+                                     Login
                                 </a>
                             @endauth
                         </div>
