@@ -281,10 +281,10 @@ class ResourcesPage extends Component
                     $query->where('price', 0);
                     break;
                 case 'under50':
-                    $query->where('price', '<', 50);
+                    $query->whereBetween('price', [0, 49.99]);
                     break;
                 case '50to100':
-                    $query->whereBetween('price', [50, 100]);
+                    $query->whereBetween('price', [50, 99.99]);
                     break;
                 case '100to250':
                     $query->whereBetween('price', [100, 250]);
