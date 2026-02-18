@@ -69,6 +69,10 @@ class MpesaCallbackController extends Controller
 
         // Find order by CheckoutRequestID (stored in reference field)
         $order = Order::where('reference', $checkoutRequestID)->first();
+        if (!$order && request()->input('order')) {
+            Log::warning('Order not found with reference: ' . $checkoutRequestID. ' - trying order_number lookup');
+            $order = Order::where('order_number', request()->input('order'))->first();
+        }
 
         if (!$order) {
             Log::error('Order not found for CheckoutRequestID: ' . $checkoutRequestID);

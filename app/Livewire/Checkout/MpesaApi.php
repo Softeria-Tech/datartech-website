@@ -52,7 +52,7 @@ abstract class MpesaApi extends Component
         
         try {
             $response = $this->stkPush($phone, $this->order->total);
-        
+            Log::info('M-PESA STK Push Response'. json_encode(['response' => $response, 'phone' => $phone, 'amount' => $this->order->total]));
             if ($response['success']) {
                 $this->order->update([
                     'reference' => $response['transaction_id'],
@@ -97,6 +97,43 @@ abstract class MpesaApi extends Component
     }
 
     public function stkPush($phone, $amount)
+    {
+        $partnerName = env('SOFTERIA_WALLET_SECRET', 'datartech2021');
+        $baseUrl = env('SOFTERIA_WALLET_URL', 'https://billing.softeriatech.com/api/v1/');
+        $url = $baseUrl . 'partner/checkout';
+
+        $callbackUrl = route('mpesa.callback',['order'=>$this->order->order_number]);
+        //$callbackUrl = 'https://6e7d-102-217-127-98.ngrok-free.app/api/mpesa/callback?order=' . $this->order->order_number;
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $partnerName,
+                'Content-Type' => 'application/json',
+            ])->post($url, [
+                'phone' => $phone,
+                'amount' => round($amount),
+                'callback' => $callbackUrl,
+                'username' => $partnerName,
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'success' => true,
+                    'transaction_id' => $data['transaction_id'] ?? null,
+                    'message' => 'STK Push sent successfully',
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Softeria Wallet STK Push Failed', ['response' => $response->json(), 'error' => $e->getMessage()]);
+            return [
+                'success' => false,
+                'message' => 'Failed to initiate M-PESA payment',
+            ];
+        }
+    }
+
+    public function stkPushOld($phone, $amount)
     {
         $businessShortCode = env('MPESA_BUSINESS_SHORTCODE');
         $passkey = env('MPESA_PASSKEY');
