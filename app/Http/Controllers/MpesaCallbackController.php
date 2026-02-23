@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MembershipPackage;
 use App\Models\Order;
+use App\Models\Subscription;
 use App\Models\UserDownload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -39,6 +41,7 @@ class MpesaCallbackController extends Controller
 
         } catch (\Exception $e) {
             Log::error('M-PESA Callback Error: ' . $e->getMessage());
+            Log::emergency('M-PESA Callback Error: ' . $e);
             
             return response()->json([
                 'ResultCode' => 1,
@@ -128,16 +131,94 @@ class MpesaCallbackController extends Controller
                 ]),
             ]);
 
-            // Create download access
-            UserDownload::create([
-                'user_id' => $order->user_id,
-                'resource_id' => $order->resource_id,
-                'order_id' => $order->id,
-                'access_type' => 'one_time_purchase',
-                'amount_paid' => $order->total,
-                'downloaded_at' => null,
-                'download_count' => 0,
-            ]);
+            if ($order->resource_id) {
+                Log::info('Creating user download access for order', [
+                    'order_number' => $order->order_number,
+                    'user_id' => $order->user_id,
+                    'resource_id' => $order->resource_id
+                ]);
+                UserDownload::create([
+                    'user_id' => $order->user_id,
+                    'resource_id' => $order->resource_id,
+                    'order_id' => $order->id,
+                    'access_type' => 'one_time_purchase',
+                    'amount_paid' => $order->total,
+                    'downloaded_at' => null,
+                    'download_count' => 0,
+                ]);
+            }elseif(!empty($order->order_data['package_id'])){
+                Log::info('Creating membership Subscription for package order', [
+                    'order_number' => $order->order_number,
+                    'user_id' => $order->user_id,
+                    'package_id' => $order->order_data['package_id']
+                ]);
+                
+                $package = MembershipPackage::where('id', $order->order_data['package_id'])->first();
+                if (!$package) {
+                    Log::error('Membership package not found for order', [
+                        'order_number' => $order->order_number,
+                        'package_id' => $order->order_data['package_id']
+                    ]);
+                    return;
+                }
+                
+                $startDate = now();
+                $packData=$package->calculateEndDate($amount,$startDate);
+                if (!$packData) {
+                    Log::error('Membership package has no end date', [
+                        'order_number' => $order->order_number,
+                        'package_id' => $order->order_data['package_id']
+                    ]);
+                    return;
+                }
+
+                $endDate = $packData['ends_at'];
+                $billingCycle = $packData['billing_cycle'];
+
+                $trialEndsAt = $package->trial_days > 0 
+                    ? now()->addDays($package->trial_days) 
+                    : null;
+
+                $subscription = Subscription::create([
+                    'user_id' => $order->user_id,
+                    'membership_package_id' => $package->id,
+                    'order_id' => $order->id,
+                    'name' => $package->name,
+                    'type' => 'membership',
+                    'plan' => $billingCycle,
+                    'price' => $amount,
+                    'quantity' => 1,
+                    'trial_ends_at' => $trialEndsAt,
+                    'starts_at' => $startDate,
+                    'ends_at' => $endDate,
+                    'next_billing_at' => $billingCycle !== 'lifetime' ? $endDate : null,
+                    'downloads_used' => 0,
+                    'download_limit' => $package->download_limit_per_month,
+                    'metadata' => [
+                        'package_details' => [
+                            'name' => $package->name,
+                            'billing_cycle' => $billingCycle,
+                            'has_premium_only' => $package->has_premium_only_access,
+                            'allows_early_access' => $package->allows_early_access,
+                        ],
+                    ],
+                ]);
+
+                // Update order with subscription reference
+                $order->update([
+                    'order_data' => array_merge($order->order_data ?? [], [
+                        'subscription_id' => $subscription->id,
+                    ]),
+                ]); 
+            }else{
+                Log::warning("System did not recognize the order type for the payment", [
+                    'order_number' => $order->order_number,
+                    'order_data' => $order->order_data,
+                    'payment'=>$mpesaReceiptNumber
+                ]);
+                return;
+            }
+
 
             Log::info('Order marked as paid', [
                 'order_number' => $order->order_number,

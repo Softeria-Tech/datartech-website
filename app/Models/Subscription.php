@@ -39,6 +39,7 @@ class Subscription extends Model
         'cancelled_at' => 'datetime',
         'next_billing_at' => 'datetime',
         'price' => 'decimal:2',
+        'metadata' => 'array'
     ];
 
     /**

@@ -175,7 +175,7 @@
                                    class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
                                     Go to My Subscriptions
                                 </a>
-                                <a href="{{ route('resources.index') }}" 
+                                <a href="{{ route('library.resources') }}" 
                                    class="px-6 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50">
                                     Browse Resources
                                 </a>

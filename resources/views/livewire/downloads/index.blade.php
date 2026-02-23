@@ -233,7 +233,7 @@
                                                 </svg>
                                                 <p class="mt-2">No downloads found</p>
                                                 <p class="text-sm mt-1">Start exploring our resources to begin downloading</p>
-                                                <a href="{{ route('resources.index') }}" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
+                                                <a href="{{ route('library.resources') }}" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
                                                     Browse Resources
                                                 </a>
                                             </td>
