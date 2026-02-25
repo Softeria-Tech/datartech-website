@@ -2,14 +2,10 @@
 
 namespace App\Livewire\Checkout;
 
-use Livewire\Component;
 use App\Models\MembershipPackage;
 use App\Models\Order;
 use App\Models\Subscription;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class MembershipCheckout extends MpesaApi
 {
@@ -225,14 +221,14 @@ class MembershipCheckout extends MpesaApi
             'next_billing_at' => $this->billingCycle !== 'lifetime' ? $endDate : null,
             'downloads_used' => 0,
             'download_limit' => $this->package->download_limit_per_month,
-            'metadata' => [
+            'metadata' => json_encode([
                 'package_details' => [
                     'name' => $this->package->name,
                     'billing_cycle' => $this->billingCycle,
                     'has_premium_only' => $this->package->has_premium_only_access,
                     'allows_early_access' => $this->package->allows_early_access,
                 ],
-            ],
+            ]),
         ]);
 
         // Update order with subscription reference

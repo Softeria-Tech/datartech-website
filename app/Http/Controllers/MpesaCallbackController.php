@@ -194,14 +194,14 @@ class MpesaCallbackController extends Controller
                     'next_billing_at' => $billingCycle !== 'lifetime' ? $endDate : null,
                     'downloads_used' => 0,
                     'download_limit' => $package->download_limit_per_month,
-                    'metadata' => [
+                    'metadata' => json_encode([
                         'package_details' => [
                             'name' => $package->name,
                             'billing_cycle' => $billingCycle,
                             'has_premium_only' => $package->has_premium_only_access,
                             'allows_early_access' => $package->allows_early_access,
                         ],
-                    ],
+                    ]),
                 ]);
 
                 // Update order with subscription reference
