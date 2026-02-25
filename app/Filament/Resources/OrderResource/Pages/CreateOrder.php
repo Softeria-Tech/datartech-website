@@ -25,7 +25,7 @@ class CreateOrder extends CreateRecord
         }
 
         if (isset($data['order_data']) && is_array($data['order_data'])) {
-            $data['order_data'] = json_encode($data['order_data']);
+            //$data['order_data'] = json_encode($data['order_data']);
         }
         
         return $data;

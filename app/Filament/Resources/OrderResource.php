@@ -11,12 +11,10 @@ use Filament\Resources\Resource as FilamentResource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\KeyValue;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
@@ -26,7 +24,6 @@ use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\Grid as InfolistGrid;
 use Filament\Infolists\Components\KeyValueEntry;
 use Illuminate\Database\Eloquent\Builder;
@@ -94,7 +91,6 @@ class OrderResource extends FilamentResource
                             ->relationship('resource', 'title')
                             ->searchable()
                             ->preload()
-                            ->required()
                             ->reactive()
                             ->afterStateUpdated(function ($state, callable $set) {
                                 if ($state) {
@@ -191,7 +187,6 @@ class OrderResource extends FilamentResource
                         TextInput::make('reference')
                             ->label('Transaction Reference')
                             ->placeholder('MPESA12345, ch_xxx, etc.')
-                            ->maxLength(255)
                             ->columnSpan(1),
                         
                         DateTimePicker::make('paid_at')
@@ -247,17 +242,13 @@ class OrderResource extends FilamentResource
                 
                 Section::make('Additional Information')
                     ->schema([
-                        /*Textarea::make('order_data')
-                            ->label('Notes / Order Data')
-                            ->rows(3)
-                            ->nullable()
-                            ->placeholder('Any additional information about this order...')
-                            ->columnSpanFull(),*/
                         KeyValue::make('order_data')
-                            ->label('Order Data Details')
-                            ->keyLabel('Property')
-                            ->valueLabel('Value')
-                            ->columnSpanFull(),
+                        ->label('Order Data Details')
+                        // Convert nested array to dot notation: ['user' => ['name' => 'John']] becomes ['user.name' => 'John']
+                        ->formatStateUsing(fn ($state) => \Illuminate\Support\Arr::dot($state ?? []))
+                        // Optional: If you need to turn it back into a nested array before saving
+                        //->dehydrateStateUsing(fn ($state) => \Illuminate\Support\Arr::undot($state ?? []))
+                        ->columnSpanFull()
                     ]),
             ]);
     }
