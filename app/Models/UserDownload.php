@@ -28,6 +28,8 @@ class UserDownload extends Model
         'amount_paid' => 'decimal:2',
     ];
 
+    protected $appends = ['tracker'];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -46,5 +48,10 @@ class UserDownload extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function getTrackerAttribute()
+    {
+        return $this->user->downloads_usage();
     }
 }

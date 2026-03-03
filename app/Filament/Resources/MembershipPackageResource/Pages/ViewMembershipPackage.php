@@ -242,7 +242,7 @@ class ViewMembershipPackage extends ViewRecord
                                 Components\Card::make()
                                     ->schema([
                                         Components\TextEntry::make('download_limit_per_month')
-                                            ->label('Monthly Downloads')
+                                            ->label('Downloads Limit')
                                             ->formatStateUsing(fn ($state) => $state ?? 'Unlimited')
                                             ->color(fn ($state) => $state ? 'primary' : 'success')
                                             ->weight(FontWeight::Bold)

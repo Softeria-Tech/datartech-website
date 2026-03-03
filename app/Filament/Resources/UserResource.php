@@ -338,7 +338,7 @@ class UserResource extends Resource
                     ->trueColor('success')
                     ->falseColor('danger')
                     ->sortable()
-                    ->alignCenter(),
+                    ->alignCenter()->toggleable(isToggledHiddenByDefault: true),
                 
                 TextColumn::make('role')
                     ->label('Role')
@@ -362,7 +362,7 @@ class UserResource extends Resource
                     ->trueColor('success')
                     ->falseColor('danger')
                     ->sortable()
-                    ->alignCenter(),
+                    ->alignCenter()->toggleable(isToggledHiddenByDefault: true),
                 
                 TextColumn::make('company')
                     ->label('Company')
@@ -380,12 +380,10 @@ class UserResource extends Resource
                 
                 TextColumn::make('downloads_count')
                     ->label('Downloads')
-                    ->counts('downloads')
+                    ->state(fn ($record): int => $record->downloads_usage())
                     ->badge()
                     ->color('warning')
-                    ->sortable()
-                    ->alignCenter()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->alignCenter(),
                 
                 TextColumn::make('created_at')
                     ->label('Joined')
@@ -678,7 +676,7 @@ class UserResource extends Resource
                                 
                                 TextEntry::make('downloads_count')
                                     ->label('Total Downloads')
-                                    ->state(fn ($record): int => $record->downloads()->count())
+                                    ->state(fn ($record): int => $record->downloads_usage())
                                     ->numeric()
                                     ->badge()
                                     ->color('success')

@@ -613,7 +613,7 @@ class SubscriptionResource extends Resource
                                     ->limit(100),
                                 
                                 TextEntry::make('membershipPackage.download_limit_per_month')
-                                    ->label('Package Limit')
+                                    ->label('Package Download Limit')
                                     ->formatStateUsing(fn ($state) => $state ? "{$state}/month" : 'Unlimited'),
                             ]),
                     ])

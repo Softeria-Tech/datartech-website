@@ -67,9 +67,11 @@ class MembershipPackageResource extends Resource
                     ->default(0),
                 Forms\Components\TextInput::make('download_limit_per_month')
                     ->numeric()
+                    ->label('Download Limit')
                     ->default(null),
                 Forms\Components\TextInput::make('download_limit_per_day')
                     ->numeric()
+                    ->label('Daily Download Limit')
                     ->default(null),
                 Forms\Components\Toggle::make('has_premium_only_access')
                     ->required(),
@@ -100,61 +102,65 @@ class MembershipPackageResource extends Resource
                     ->numeric()
                     ->label('Monthly')
                     ->sortable(),
-                /*Tables\Columns\TextColumn::make('price_yearly')
+                Tables\Columns\TextColumn::make('price_yearly')
                     ->numeric()
                     ->label('Yearly')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('price_quarterly')
                     ->numeric()
                     ->label('Quarterly')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('price_lifetime')
                     ->numeric()
                     ->label('Lifetime')
-                    ->sortable(),*/
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('discount_percentage')
                     ->numeric()
                     ->label('Disc %')
-                    ->sortable(),
-                /*Tables\Columns\TextColumn::make('discount_price_monthly')
+                    ->sortable()->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('discount_price_monthly')
                     ->numeric()
                     ->label('Disc. Monthly')
-                    ->sortable(),
+                    ->sortable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('discount_price_yearly')
                     ->numeric()
                     ->label('Disc. Yr')
-                    ->sortable(),
+                    ->sortable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('discount_ends_at')
                     ->dateTime()
                     ->label('Disc. Ends')
-                    ->sortable(),*/
+                    ->sortable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('duration_days')
                     ->numeric()
                     ->label('Days')
-                    ->sortable(),
-                /*Tables\Columns\TextColumn::make('trial_days')
+                    ->sortable()->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('trial_days')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('download_limit_per_month')
                     ->numeric()
+                    ->label('Download Limit')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('download_limit_per_day')
                     ->numeric()
-                    ->sortable(),*/
+                    ->label('Daily Download Limit')
+                    ->sortable(),
                 Tables\Columns\IconColumn::make('has_premium_only_access')
                     ->label('Premium Only')
-                    ->boolean(),
+                    ->boolean()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\IconColumn::make('allows_early_access')
                     ->label('Early Access')
-                    ->boolean(),
+                    ->boolean()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\IconColumn::make('is_popular')
                     ->boolean(),
-                /*Tables\Columns\TextColumn::make('sort_order')
+                Tables\Columns\TextColumn::make('sort_order')
                     ->numeric()
-                    ->sortable(),*/
+                    ->sortable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean(),
-                /*Tables\Columns\TextColumn::make('created_at')
+                Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -165,7 +171,7 @@ class MembershipPackageResource extends Resource
                 Tables\Columns\TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),*/
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
@@ -177,7 +183,7 @@ class MembershipPackageResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])->striped();
     }
 
     public static function getRelations(): array

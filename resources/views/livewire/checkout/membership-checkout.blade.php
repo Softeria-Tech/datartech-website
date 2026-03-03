@@ -161,7 +161,7 @@
                                     @if($package->trial_days > 0)
                                         <li>✓ {{ $package->trial_days }}-day trial period started</li>
                                     @endif
-                                    <li>✓ Download limit: {{ $package->download_limit_per_month ?? 'Unlimited' }}/month</li>
+                                    <li>✓ Download limit: {{ $package->download_limit_per_month ?? 'Unlimited' }}</li>
                                     <li>✓ Check your email for confirmation</li>
                                 </ul>
                             </div>

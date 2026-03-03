@@ -86,6 +86,13 @@ class UserDownloadResource extends Resource
                     ->alignCenter()
                     ->badge()
                     ->color(fn (int $state): string => $state > 1 ? 'warning' : 'gray'),
+                TextColumn::make('tracker')
+                    ->label('User Downloads')
+                    ->numeric()
+                    ->sortable()
+                    ->alignCenter()
+                    ->badge()
+                    ->color(fn (int $state): string => $state > 1 ? 'warning' : 'gray'),
                 
                 TextColumn::make('ip_address')
                     ->label('IP')

@@ -90,7 +90,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(UserDownload::class);
     }
 
-   public function subscriptions()
+    public function downloadTrackers(){
+        return $this->hasMany(DownloadTracker::class);
+    }
+
+    public function subscriptions()
     {
         return $this->hasMany(Subscription::class);
     }
@@ -108,7 +112,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function downloads_usage()
     {
-        return $this->downloads()->sum('download_count');
+        return $this->downloadTrackers()->sum('downloads');
     }
     
 }
