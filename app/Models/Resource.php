@@ -11,7 +11,8 @@ class Resource extends Model
 {
     protected $casts = [
         'published_date'=>'datetime',
-        'is_published'=>'boolean'
+        'is_published'=>'boolean',
+        'requires_subscription'=>'boolean'
     ];
 
     public function downloads()

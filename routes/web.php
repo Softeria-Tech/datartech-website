@@ -79,13 +79,13 @@ Route::middleware('web')->group(function(){
             echo nl2br(Artisan::output());
             Artisan::call('cache:clear');
             echo nl2br(Artisan::output());
-            Artisan::call('migrate');
+            Artisan::call('migrate', ['--force' => true]);
             echo nl2br(Artisan::output());
             exec('composer dump-autoload -d ' . base_path(), $output, $returnValue);
             //exec('ln -s ../public_html public',$output, $returnValue);        
             echo "Artisan commands executed successfully.\n<br>";
             echo json_encode($output);
-            echo json_encode($output);
+            echo json_encode($returnValue);
         }
     });
 

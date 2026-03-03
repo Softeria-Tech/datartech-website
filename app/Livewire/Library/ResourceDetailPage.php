@@ -229,6 +229,7 @@ class ResourceDetailPage extends Component
             ]);
         }
 
+        trackDownload($resource->id);
     }
 
     public function render()
@@ -237,6 +238,7 @@ class ResourceDetailPage extends Component
             'isAuthenticated' => Auth::check(),
             'user' => Auth::user(),
             'hasPurchased' => $this->userHasPurchased(),
+            'limitReached' => hasHitDownloadLimit($this->resource->id),
             'downloadUrl' => $this->getDownloadUrl(),
             'fileTypeIcon' => $this->getFileTypeIcon(),
             'fileTypeColor' => $this->getFileTypeColor(),

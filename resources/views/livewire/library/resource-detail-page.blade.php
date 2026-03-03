@@ -241,10 +241,14 @@
                                     </svg>
                                     <span class="font-medium">You own this resource</span>
                                 </div>
-                                <a wire:click="markDownloaded" href="{{ $downloadUrl }}" download
-                                   class="block w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white text-center font-medium rounded-lg transition">
-                                    Download Now
-                                </a>
+                                @if(!$limitReached)
+                                    <a wire:click="markDownloaded" href="{{ $downloadUrl }}" download
+                                    class="block w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white text-center font-medium rounded-lg transition">
+                                        Download Now
+                                    </a>
+                                @else
+                                    <span class="block w-full px-4 py-3 bg-red-600 hover:bg-red-700  text-white text-center ">{{$limitReached}}</span>
+                                @endif
                             </div>
                         @else
                             {{-- Not Purchased --}}
@@ -361,9 +365,15 @@
                             @endif
                             
                             <div class="mt-3 flex items-center justify-between">
-                                <span class="text-lg font-bold text-gray-900 dark:text-white">
-                                    Ksh{{ number_format($related->price, 0) }}
-                                </span>
+                                @if($related->price==0)
+                                    <span class="text-2xl font-bold text-green-600 dark:text-green-400">
+                                        Free
+                                    </span>
+                                @else
+                                    <span class="text-lg font-bold text-gray-900 dark:text-white">
+                                        Ksh{{ number_format($related->price, 0) }}
+                                    </span>
+                                @endif
                                 <a href="{{ route('library.resource.detail', $related->slug) }}"
                                    class="text-primary-600 hover:text-primary-700 text-sm font-medium">
                                     View →
