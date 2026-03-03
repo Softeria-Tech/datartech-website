@@ -292,7 +292,7 @@
                         <div class="space-y-3">
                             <a href="{{ route('login', ['redirect' => route('library.resource.detail', $resource->slug)]) }}"
                                class="block w-full px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white text-center font-medium rounded-lg transition">
-                                Purchase
+                                {{$resource->price==0?'Login to Download':'Purchase'}}
                             </a>
                             <p class="text-xs text-center text-gray-500 dark:text-gray-400">
                                 Already have an account? <a href="{{ route('login', ['redirect' => route('library.resource.detail', $resource->slug)]) }}" class="text-primary-600 hover:underline">Sign in</a>
