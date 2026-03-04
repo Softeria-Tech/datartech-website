@@ -130,7 +130,7 @@ class SubscriptionResource extends Resource
                         TextInput::make('price')
                             ->label('Price')
                             ->numeric()
-                            ->prefix('$')
+                            ->prefix('Ksh ')
                             ->required()
                             ->step(0.01)
                             ->columnSpan(1),
@@ -309,7 +309,7 @@ class SubscriptionResource extends Resource
                     ->formatStateUsing(fn ($state, $record) => 
                         $record->download_limit 
                             ? "{$state} / {$record->download_limit}"
-                            : "{$state} (unlimited)"
+                            : "{$state} / ထ"
                     )
                     ->badge()
                     ->color(fn ($record) => 
@@ -614,7 +614,7 @@ class SubscriptionResource extends Resource
                                 
                                 TextEntry::make('membershipPackage.download_limit_per_month')
                                     ->label('Download Limit')
-                                    ->formatStateUsing(fn ($state) => $state ? "{$state}/month" : 'Unlimited'),
+                                    ->formatStateUsing(fn ($state) => $state ? "{$state}/month" : 'ထ'),
                             ]),
                     ])
                     ->visible(fn ($record) => $record->membershipPackage),
