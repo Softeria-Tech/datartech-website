@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\DownloadTracker;
 use App\Models\Resource;
 use App\Models\Order;
 use App\Models\Subscription;
@@ -33,7 +34,7 @@ class ResourceStats extends BaseWidget
                 ->descriptionIcon('heroicon-m-eye')
                 ->color('info'),
                 
-            Stat::make('Total Downloads', $this->getFilteredSum(Resource::class, 'download_count', $dateFilter, $startDate, $endDate))
+            Stat::make('Total Downloads', $this->getFilteredSum(DownloadTracker::class, 'downloads', $dateFilter, $startDate, $endDate))
                 ->description($period === 'all' ? 'All time' : ucfirst(str_replace('_', ' ', $period)))
                 ->descriptionIcon('heroicon-m-arrow-down-tray')
                 ->color('warning'),
