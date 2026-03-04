@@ -212,14 +212,14 @@ class SubscriptionResource extends Resource
                     ->columns(2)
                     ->schema([
                         TextInput::make('download_limit')
-                            ->label('Monthly Download Limit')
+                            ->label('Download Limit')
                             ->numeric()
                             ->nullable()
                             ->helperText('Leave empty for unlimited')
                             ->columnSpan(1),
                         
                         TextInput::make('downloads_used')
-                            ->label('Downloads Used This Month')
+                            ->label('Downloads Used')
                             ->numeric()
                             ->default(0)
                             ->minValue(0)
@@ -613,7 +613,7 @@ class SubscriptionResource extends Resource
                                     ->limit(100),
                                 
                                 TextEntry::make('membershipPackage.download_limit_per_month')
-                                    ->label('Package Download Limit')
+                                    ->label('Download Limit')
                                     ->formatStateUsing(fn ($state) => $state ? "{$state}/month" : 'Unlimited'),
                             ]),
                     ])
