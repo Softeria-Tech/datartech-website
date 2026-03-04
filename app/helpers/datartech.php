@@ -30,6 +30,12 @@ if(!function_exists('trackDownload')){
 
         $tracker->downloads++;
         $tracker->save();
+
+        $active = Auth::user()->activeSubscription()->first();
+        if($active){
+            $active->downloads_used++;
+            $active->save();
+        }    
     }
 }
 
@@ -75,7 +81,7 @@ if(!function_exists('hasHitDownloadLimit')){
             return $msg;
         }
 
-        if($sub_limit && $sub_limit <= $periodTrack){
+        if(($sub_limit && $sub_limit <= $periodTrack) || !$active->canDownload()){
             $msg = 'Download Limit Exceeded';
             Log::info($msg,['sub limit'=>$sub_limit,'downloads'=>$periodTrack]);
             return $msg;

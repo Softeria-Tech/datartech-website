@@ -13,4 +13,9 @@ class DownloadTracker extends Model
         'downloads' => 'integer',
         'resources' => 'array'
     ];
+
+    function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
