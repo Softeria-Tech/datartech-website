@@ -27,6 +27,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\Grid as InfolistGrid;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class SubscriptionResource extends Resource
@@ -218,7 +219,7 @@ class SubscriptionResource extends Resource
                             ->helperText('Leave empty for unlimited')
                             ->columnSpan(1),
                         
-                        TextInput::make('downloads_used')
+                        TextInput::make('download_usage')
                             ->label('Downloads Used')
                             ->numeric()
                             ->default(0)
@@ -302,7 +303,7 @@ class SubscriptionResource extends Resource
                         'expired' => 'heroicon-o-calendar',
                     ]),
                 
-                TextColumn::make('downloads_used')
+                TextColumn::make('download_usage')
                     ->label('Downloads')
                     ->numeric()
                     ->sortable()
@@ -313,9 +314,9 @@ class SubscriptionResource extends Resource
                     )
                     ->badge()
                     ->color(fn ($record) => 
-                        $record->download_limit && $record->downloads_used >= $record->download_limit 
+                        $record->download_limit && $record->download_usage >= $record->download_limit 
                             ? 'danger' 
-                            : ($record->downloads_used > 0 ? 'warning' : 'gray')
+                            : ($record->download_usage > 0 ? 'warning' : 'gray')
                     ),
                 
                 TextColumn::make('ends_at')
@@ -623,14 +624,17 @@ class SubscriptionResource extends Resource
                     ->schema([
                         InfolistGrid::make(3)
                             ->schema([
-                                TextEntry::make('downloads_used')
+                               TextEntry::make('download_usage')
                                     ->label('Downloads Used')
                                     ->numeric()
                                     ->badge()
                                     ->color(fn ($record) => 
-                                        $record->download_limit && $record->downloads_used >= $record->download_limit 
+                                        $record->download_limit && $record->download_usage >= $record->download_limit 
                                             ? 'danger' 
                                             : 'warning'
+                                    )
+                                    ->helperText(fn ($record) => 
+                                        "{$record->tracker_start_date->format('M d')} - {$record->tracker_end_date->format('M d, Y')}"
                                     ),
                                 
                                 TextEntry::make('download_limit')
@@ -717,7 +721,7 @@ class SubscriptionResource extends Resource
                 $record->cancelled_at ? 'Cancelled' : ($record->ends_at && $record->ends_at->isPast() ? 'Expired' : 'Active'),
                 $record->starts_at?->format('Y-m-d'),
                 $record->ends_at?->format('Y-m-d'),
-                $record->downloads_used,
+                $record->download_usage,
                 $record->download_limit ?? 'Unlimited',
                 $record->order_id,
             ]);

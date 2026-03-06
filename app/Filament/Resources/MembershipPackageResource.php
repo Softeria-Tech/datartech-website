@@ -141,7 +141,7 @@ class MembershipPackageResource extends Resource
                     ->sortable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('download_limit_per_month')
                     ->numeric()
-                    ->label('Download Limit')
+                    ->label('Monthly Download Limit')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('download_limit_per_day')
                     ->numeric()

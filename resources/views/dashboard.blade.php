@@ -163,7 +163,10 @@
                                                 </span>
                                                 @if($subscription->download_limit)
                                                     <p class="text-xs text-gray-500 mt-1">
-                                                        Downloads: {{ $subscription->downloads_used }}/{{ $subscription->download_limit }}
+                                                        Downloads: {{ $subscription->download_usage }}/{{ $subscription->download_limit }}                                                        
+                                                    </p>
+                                                    <p class="text-xs text-gray-500 mt-1">
+                                                        Resets On: <span class="font-semibold">{{ $subscription->tracker_end_date->format('M d, Y') }}</span>
                                                     </p>
                                                 @endif
                                             </div>

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\MembershipPackage;
 use App\Models\User;
+use Carbon\Carbon;
+use RoundingMode;
 
 class Subscription extends Model
 {
@@ -39,6 +41,12 @@ class Subscription extends Model
         'cancelled_at' => 'datetime',
         'next_billing_at' => 'datetime',
         'price' => 'decimal:2',
+    ];
+
+    protected $appends = [
+        'download_usage',
+        'tracker_start_date',
+        'tracker_end_date'
     ];
 
     /**
@@ -98,7 +106,7 @@ class Subscription extends Model
             return null; // Unlimited
         }
 
-        return max(0, $this->download_limit - $this->downloads_used);
+        return max(0, $this->download_limit - $this->download_usage);
     }
 
     /**
@@ -110,7 +118,7 @@ class Subscription extends Model
             return false;
         }
 
-        if ($this->download_limit && $this->downloads_used >= $this->download_limit) {
+        if ($this->download_limit && $this->download_usage >= $this->download_limit) {
             return false;
         }
 
@@ -134,5 +142,48 @@ class Subscription extends Model
     public function scopeMembership($query)
     {
         return $query->where('type', 'membership');
+    }
+
+    public function getDownloadUsageAttribute()
+    {
+        $today = Carbon::today();
+        $startOfSubscription = $this->starts_at;
+
+        // 1. Calculate how many full months have passed since the start
+        $monthsElapsed = $startOfSubscription->diffInMonths($today);
+
+        // 2. Define the start of the "Current Billing Month"
+        // e.g., If started Jan 15, and today is March 20, 
+        // this becomes Jan 15 + 2 months = March 15.
+        $currentMonthStart = $startOfSubscription->copy()->addMonths($monthsElapsed);
+
+        // 3. Define the end of this billing cycle (one month after the current start)
+        $currentMonthEnd = $currentMonthStart->copy()->addMonth()->subDay();
+
+        $this->tracker_start_date = $currentMonthStart;
+        $this->tracker_end_date = $currentMonthEnd->addDay();
+
+        return DownloadTracker::query()
+            ->where('user_id', $this->user_id)
+            ->whereBetween('date', [$currentMonthStart, $currentMonthEnd])
+            ->sum('downloads'); // Added sum() assuming you want the total count
+    }
+
+    public function getTrackerStartDate()
+    {
+        if (!$this->tracker_start_date) {
+            $this->getDownloadUsageAttribute();
+        }
+
+        return $this->tracker_start_date;
+    }
+
+    public function getTrackerEndDate()
+    {
+        if (!$this->tracker_end_date) {
+            $this->getDownloadUsageAttribute();
+        }
+
+        return $this->tracker_end_date;
     }
 }
