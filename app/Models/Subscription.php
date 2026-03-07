@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\MembershipPackage;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use RoundingMode;
 
 class Subscription extends Model
@@ -42,6 +43,9 @@ class Subscription extends Model
         'next_billing_at' => 'datetime',
         'price' => 'decimal:2',
     ];
+
+    public $tracker_start_date;
+    public $tracker_end_date;
 
     protected $appends = [
         'download_usage',
@@ -146,6 +150,7 @@ class Subscription extends Model
 
     public function getDownloadUsageAttribute()
     {
+        Log::info('getDownloadUsageAttribute');
         $today = Carbon::today();
         $startOfSubscription = $this->starts_at;
 
@@ -169,18 +174,19 @@ class Subscription extends Model
             ->sum('downloads'); // Added sum() assuming you want the total count
     }
 
-    public function getTrackerStartDate()
+    public function getTrackerStartDateAttribute()
     {
-        if (!$this->tracker_start_date) {
+        if (empty($this->tracker_start_date)) {
             $this->getDownloadUsageAttribute();
         }
 
         return $this->tracker_start_date;
     }
 
-    public function getTrackerEndDate()
+    public function getTrackerEndDateAttribute()
     {
-        if (!$this->tracker_end_date) {
+        Log::info('getTrackerEndDateAttribute');
+        if (empty($this->tracker_end_date)) {
             $this->getDownloadUsageAttribute();
         }
 

@@ -166,7 +166,7 @@
                                                         Downloads: {{ $subscription->download_usage }}/{{ $subscription->download_limit }}                                                        
                                                     </p>
                                                     <p class="text-xs text-gray-500 mt-1">
-                                                        Resets On: <span class="font-semibold">{{ $subscription->tracker_end_date->format('M d, Y') }}</span>
+                                                        Resets On: <span class="font-semibold">{{ $subscription->tracker_end_date?$subscription->tracker_end_date->format('M d, Y'):'' }}</span>
                                                     </p>
                                                 @endif
                                             </div>

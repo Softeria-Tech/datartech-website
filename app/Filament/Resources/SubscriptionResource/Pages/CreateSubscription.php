@@ -26,6 +26,10 @@ class CreateSubscription extends CreateRecord
         if (empty($data['order_id'])) {
             $data['order_id'] = 'SUB-' . strtoupper(Str::random(10));
         }
+
+        if(isset($data['download_usage'])){
+            unset($data['download_usage']);
+        }
         
         return $data;
     }

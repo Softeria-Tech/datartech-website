@@ -16,6 +16,11 @@ class EditSubscription extends EditRecord
         if (($data['plan'] ?? null) === 'lifetime') {
             $data['ends_at'] = null;
         }
+
+         if(isset($data['download_usage'])){
+            unset($data['download_usage']);
+        }
+        
         
         return $data;
     }
