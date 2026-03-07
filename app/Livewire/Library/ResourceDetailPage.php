@@ -7,6 +7,7 @@ use App\Models\Resource;
 use App\Models\Category;
 use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -171,10 +172,15 @@ class ResourceDetailPage extends Component
         
         $canDownload = $this->userHasPurchased();
             
-        if ($canDownload && $this->resource->file_path) {
-            return Storage::url($this->resource->file_path);
+        if ($canDownload) {
+            if(Resource::$delivery_type_upload == $this->resource->delivery_type && !empty($this->resource->file_path)){
+                return Storage::url($this->resource->file_path);
+            }else if(Resource::$delivery_type_url == $this->resource->delivery_type && $this->resource->external_url){
+                return $this->resource->external_url;
+            }
         }
         
+        Log::info($this->resource->title . ': Resource not available for download');
         return '#';
     }
 
@@ -208,6 +214,11 @@ class ResourceDetailPage extends Component
     public function markDownloaded()
     {
         if (!Auth::check()) return;
+
+        //don't count if there is nothing to download
+        if(empty($this->resource->file_path) && empty($this->resource->external_url)){
+            return;
+        }
 
         $user = Auth::user();
         $resource = $this->resource;

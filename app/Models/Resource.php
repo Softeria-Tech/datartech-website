@@ -15,6 +15,10 @@ class Resource extends Model
         'requires_subscription'=>'boolean'
     ];
 
+    static $delivery_type_upload = 'upload';
+    static $delivery_type_url = 'url';
+    static $access_type_both = 'both';
+
     public function downloads()
     {
         return $this->hasMany(UserDownload::class);
