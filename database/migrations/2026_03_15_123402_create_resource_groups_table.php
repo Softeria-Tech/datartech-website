@@ -26,8 +26,9 @@ return new class extends Migration
         
         // Add group_id to resources table
         Schema::table('resources', function (Blueprint $table) {
-            $table->foreignId('group_id')->nullable()->after('category_id')->constrained('resource_groups')->nullOnDelete();
+            $table->unsignedBigInteger('group_id')->nullable()->after('category_id');
             $table->index('group_id');
+            $table->foreign('group_id')->references('id')->on('resource_groups')->nullOnDelete();
         });
     }
 
