@@ -55,7 +55,7 @@ if(!function_exists('hasHitDownloadLimit')){
         $active = Auth::user()->activeSubscription()->first();
 
         if($resource->requires_subscription && !$active){
-            return 'Subscribe to unlock';
+            return "<a href='".route('membership.plans')."'>Subscribe to unlock</a>";
         }
 
         

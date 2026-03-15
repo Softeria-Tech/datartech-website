@@ -247,7 +247,7 @@
                                         Download Now
                                     </a>
                                 @else
-                                    <span class="block w-full px-4 py-3 bg-red-600 hover:bg-red-700  text-white text-center ">{{$limitReached}}</span>
+                                    <span class="block w-full px-4 py-3 bg-red-600 hover:bg-red-700  text-white text-center ">{!!$limitReached!!}</span>
                                 @endif
                             </div>
                         @else

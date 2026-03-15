@@ -108,7 +108,7 @@ class ViewResource extends ViewRecord
                             ->schema([
                                 TextEntry::make('file_size')
                                     ->label('File Size')
-                                    ->formatStateUsing(fn ($state) => $state ? self::formatBytes($state) : 'Unknown')
+                                    ->formatStateUsing(fn ($state) => $state ? ResourceResource::formatBytes($state) : 'Unknown')
                                     ->badge()
                                     ->color('gray'),
                                 

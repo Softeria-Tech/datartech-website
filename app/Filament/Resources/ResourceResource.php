@@ -88,6 +88,20 @@ class ResourceResource extends FilamentResource
                                                     ->relationship('parent', 'name')
                                                     ->searchable()
                                                     ->preload(),
+                                                Forms\Components\Select::make('group_id')
+                                                    ->label('Resource Group')
+                                                    ->relationship('group', 'name')
+                                                    ->searchable()
+                                                    ->preload()
+                                                    ->options(function () {
+                                                        return \App\Models\ResourceGroup::orderBy('name')
+                                                            ->get()
+                                                            ->mapWithKeys(fn ($group) => [
+                                                                $group->id => $group->full_path
+                                                            ]);
+                                                    })
+                                                    ->helperText('Organize resources into groups for bulk management')
+                                                    ->columnSpan(1),
                                             ])
                                             ->createOptionUsing(fn (array $data) => Category::create($data))
                                             ->columnSpan(1),                                       
@@ -378,6 +392,13 @@ class ResourceResource extends FilamentResource
                         ? route('filament.admin.resources.categories.view', $record->category) 
                         : null
                     ),
+                Tables\Columns\TextColumn::make('group.full_path')
+                    ->label('Group')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('warning')
+                    ->toggleable(),
                     
                 Tables\Columns\TextColumn::make('price')
                     ->formatStateUsing(function ($state) {
@@ -538,5 +559,16 @@ class ResourceResource extends FilamentResource
         $bytes /= pow(1024, $pow);
         
         return round($bytes, $precision) . ' ' . $units[$pow];
+    }
+
+    public static function getNavigationUrlForGroup($groupId): string
+    {
+        return static::getUrl('index', [
+            'tableFilters' => [
+                'group_id' => [
+                    'value' => $groupId
+                ]
+            ]
+        ]);
     }
 }
