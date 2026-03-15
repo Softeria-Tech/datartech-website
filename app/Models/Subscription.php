@@ -150,7 +150,7 @@ class Subscription extends Model
 
     public function getDownloadUsageAttribute()
     {
-        Log::info('getDownloadUsageAttribute');
+        //Log::info('getDownloadUsageAttribute');
         $today = Carbon::today();
         $startOfSubscription = $this->starts_at;
 

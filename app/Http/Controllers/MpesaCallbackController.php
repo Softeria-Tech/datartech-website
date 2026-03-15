@@ -55,6 +55,8 @@ class MpesaCallbackController extends Controller
      */
     private function handleStkCallback($data)
     {
+        Log::info('STK Callback Received');
+
         $callback = $data['Body']['stkCallback'];
         
         $merchantRequestID = $callback['MerchantRequestID'];
@@ -179,7 +181,7 @@ class MpesaCallbackController extends Controller
                     ? now()->addDays($package->trial_days) 
                     : null;
 
-                $subscription = Subscription::create([
+                $subData =[
                     'user_id' => $order->user_id,
                     'membership_package_id' => $package->id,
                     'order_id' => $order->id,
@@ -202,10 +204,19 @@ class MpesaCallbackController extends Controller
                             'allows_early_access' => $package->allows_early_access,
                         ],
                     ]),
-                ]);
+                ];
+                $subscription = Subscription::firstOrCreate([
+                    'user_id' => $order->user_id,
+                    'order_id' => $order->id,
+                ],$subData);
+
+                $subscription->update($subData);
 
                 // Update order with subscription reference
                 $order->update([
+                    'payment_status' => 'paid',
+                    'paid_at' => now(),
+                    'order_status' => 'completed',
                     'order_data' => array_merge($order->order_data ?? [], [
                         'subscription_id' => $subscription->id,
                     ]),
@@ -264,6 +275,8 @@ class MpesaCallbackController extends Controller
      */
     private function handleC2BCallback($data)
     {
+        Log::info('C2B Callback Received');
+
         $transactionType = $data['TransactionType'];
         $transID = $data['TransID'];
         $transTime = $data['TransTime'];
@@ -302,7 +315,7 @@ class MpesaCallbackController extends Controller
             'paid_at' => now(),
             'reference' => $transID,
             'order_data' => array_merge($order->order_data ?? [], [
-                'mpesa_c2b' => [
+                'mpesa_STK Callback Receivedc2b' => [
                     'transaction_id' => $transID,
                     'amount' => $transAmount,
                     'time' => $transTime,

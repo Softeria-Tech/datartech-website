@@ -206,7 +206,10 @@ class MembershipCheckout extends MpesaApi
             ? now()->addDays($this->package->trial_days) 
             : null;
 
-        $subscription = Subscription::create([
+        $subscription = Subscription::firstOrCreate([
+                'user_id' => Auth::id(),
+                'order_id' => $this->order->id,
+            ],[
             'user_id' => Auth::id(),
             'membership_package_id' => $this->package->id,
             'order_id' => $this->order->id,
@@ -233,6 +236,9 @@ class MembershipCheckout extends MpesaApi
 
         // Update order with subscription reference
         $this->order->update([
+            'payment_status' => 'paid',
+            'paid_at' => now(),
+            'order_status' => 'completed',
             'order_data' => array_merge($this->order->order_data ?? [], [
                 'subscription_id' => $subscription->id,
             ]),

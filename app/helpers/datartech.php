@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 if(!function_exists('trackDownload')){
     function trackDownload($rid){
         if(!Auth::check()){
-            Log::info('User not logged in');
+            //Log::info('User not logged in');
             return;
         }
 
@@ -42,7 +42,7 @@ if(!function_exists('trackDownload')){
 if(!function_exists('hasHitDownloadLimit')){
     function hasHitDownloadLimit($rid){
         if(!Auth::check()){
-            Log::info('User not logged in');
+            //Log::info('User not logged in');
             return false;
         }
 
