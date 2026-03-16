@@ -15,7 +15,19 @@ use App\Livewire\Library\ResourceDetailPage;
 use App\Livewire\Membership\MembershipPlans;
 
 Route::middleware('web')->group(function(){
-    Route::get('/', [FrontendController::class, 'index'])->name('index');
+    //Route::get('/', [FrontendController::class, 'index'])->name('index');
+
+
+    Route::get('/index', App\Livewire\Library\LandingPage::class)->name('index');
+    Route::get('/', App\Livewire\Library\LandingPage::class)->name('library.landing');
+    Route::get('/resources', App\Livewire\Library\ResourcesPage::class)->name('library.resources');
+    Route::get('/group/{slug}', App\Livewire\Library\GroupPage::class)->name('library.group');
+    Route::get('/category/{slug}', App\Livewire\Library\CategoryPage::class)->name('library.category');
+
+    Route::get('resource/preview', [FrontendController::class, 'previewResource'])->name('resources.show');
+    Route::get('/library', ResourcesPage::class)->name('library.resources');
+    Route::get('/library/resource/{slug}', ResourceDetailPage::class)->name('library.resource.detail');
+    Route::get('/membership/plans', MembershipPlans::class)->name('membership.plans');
 
     Route::get('service-details/{service_id}', [FrontendController::class, 'serviceDetails'])->name('service-details');
     Route::get('about-us', [FrontendController::class, 'aboutUs'])->name('about-us');
@@ -23,12 +35,6 @@ Route::middleware('web')->group(function(){
     Route::get('shop', [FrontendController::class, 'shop'])->name('shop');
     Route::get('shop/product-details/{product_id}', [FrontendController::class, 'productDetails'])->name('product-details');
     Route::get('product-categories/{category_id}', [FrontendController::class, 'productCategories'])->name('product-categories');
-
-    Route::get('resource/preview', [FrontendController::class, 'previewResource'])->name('resources.show');
-
-    Route::get('/library', ResourcesPage::class)->name('library.resources');
-    Route::get('/library/resource/{slug}', ResourceDetailPage::class)->name('library.resource.detail');
-    Route::get('/membership/plans', MembershipPlans::class)->name('membership.plans');
 
     Route::middleware(['auth', 'verified'])->group(function(){
 

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <title>@yield('title', config('app.name', 'Laravel')) - Digital Library</title>
+    <title>@yield('title', config('app.name', 'Laravel')) - Datartech</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -22,22 +22,6 @@
 </head>
 <body class="font-sans antialiased bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
     
-    <!-- Loading Spinner -->
-    {{-- <div id="loading-spinner" class="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center transition-opacity duration-300">
-        <div class="w-16 h-16 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
-    </div>
-
-    <script>
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                document.getElementById('loading-spinner').style.opacity = '0';
-                setTimeout(function() {
-                    document.getElementById('loading-spinner').style.display = 'none';
-                }, 300);
-            }, 500);
-        });
-    </script> --}}
-
     <!-- Navigation -->
     @include('frontend.layouts.partials.navigation')
 

@@ -186,4 +186,13 @@ class Category extends Model
             }
         });
     }
+
+    public function getAllDescendantIds(): array
+    {
+        $ids = [$this->id];
+        foreach ($this->children as $child) {
+            $ids = array_merge($ids, $child->getAllDescendantIds());
+        }
+        return $ids;
+    }
 }

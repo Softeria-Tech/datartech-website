@@ -8,11 +8,8 @@ use Livewire\WithFileUploads;
 use App\Models\Resource;
 use App\Models\Category;
 use App\Models\Order;
-use App\Models\UserDownload;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ResourcesPage extends Component
 {
