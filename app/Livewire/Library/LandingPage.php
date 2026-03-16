@@ -12,6 +12,8 @@ class LandingPage extends ResourcesPage
     public $recentResources;
     public $groups;
     public $categories;
+    public $totalGroupsCount;
+    public $totalCategoriesCount;
     
     // Search
     public $search = '';
