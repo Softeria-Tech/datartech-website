@@ -2,12 +2,11 @@
 
 namespace App\Livewire\Library;
 
-use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Category;
 use App\Models\Resource;
 
-class CategoryPage extends Component
+class CategoryPage extends ResourcesPage
 {
     use WithPagination;
 
@@ -26,7 +25,7 @@ class CategoryPage extends Component
         'selectedSubCategory' => ['except' => ''],
     ];
 
-    public function mount($slug)
+    public function mount($slug = '')
     {
         $this->slug = $slug;
         $this->loadCategory();

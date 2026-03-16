@@ -2,12 +2,11 @@
 
 namespace App\Livewire\Library;
 
-use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\ResourceGroup;
 use App\Models\Resource;
 
-class GroupPage extends Component
+class GroupPage extends ResourcesPage
 {
     use WithPagination;
 
@@ -26,7 +25,7 @@ class GroupPage extends Component
         'selectedSubGroup' => ['except' => ''],
     ];
 
-    public function mount($slug)
+    public function mount($slug='')
     {
         $this->slug = $slug;
         $this->loadGroup();

@@ -22,7 +22,7 @@ class LandingPage extends ResourcesPage
     protected $initialLimit = 15;
     protected $expandedLimit = 30;
     
-    public function mount()
+    public function mount($slug = '')
     {
         $this->loadGroups();
         $this->loadCategories();

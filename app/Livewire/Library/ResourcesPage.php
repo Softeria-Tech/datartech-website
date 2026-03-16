@@ -48,7 +48,7 @@ class ResourcesPage extends Component
         'sortBy' => ['except' => 'latest'],
     ];
 
-    public function mount()
+    public function mount($slug = '')
     {
         // Load categories with resource counts
         $this->loadCategories();

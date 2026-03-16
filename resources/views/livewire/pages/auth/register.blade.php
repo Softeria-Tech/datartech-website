@@ -37,6 +37,15 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div>
+<!-- Header with Welcome Message -->
+    <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+            Registration Form
+        </h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Join Our Community
+        </p>
+    </div>
     <form wire:submit="register">
         <!-- Name -->
         <div>
