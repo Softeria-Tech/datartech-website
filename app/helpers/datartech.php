@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\DownloadTracker;
+use App\Models\MembershipPackage;
 use App\Models\Resource;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -94,5 +95,11 @@ if(!function_exists('hasHitDownloadLimit')){
         }
 
         return false;
+    }
+
+    if(!function_exists('getTrialPackage')){
+        function getTrialPackage(){
+            return MembershipPackage::getTrialPackage();
+        }
     }
 }

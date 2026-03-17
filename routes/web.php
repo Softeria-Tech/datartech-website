@@ -19,7 +19,7 @@ Route::middleware('web')->group(function(){
 
 
     Route::get('/index', App\Livewire\Library\LandingPage::class)->name('index');
-    Route::get('/', App\Livewire\Library\LandingPage::class)->name('library.landing');
+    Route::get('/', App\Livewire\Library\LandingPage::class)->name('home');
     Route::get('/resources', App\Livewire\Library\ResourcesPage::class)->name('library.resources');
     Route::get('/group/{slug}', App\Livewire\Library\GroupPage::class)->name('library.group');
     Route::get('/category/{slug}', App\Livewire\Library\CategoryPage::class)->name('library.category');
@@ -48,9 +48,9 @@ Route::middleware('web')->group(function(){
         Route::get('/checkout/resume/{order}', [CheckoutController::class, 'resumeResourceCheckout'])->name('checkout.resume');    
         Route::get('/checkout/membership/resume/{order}', [CheckoutController::class, 'resumeMembershipCheckout'])->name('checkout.membership.resume');
 
-        Route::get('/checkout/membership/{packageSlug}/{billingCycle}/{order?}', MembershipCheckout::class)->name('checkout.membership');   
-
         Route::get('/checkout/membership/success/{order}', [CheckoutController::class, 'membershipSuccess'])->name('checkout.membership.success');
+        
+        Route::get('/checkout/membership/{packageSlug}/{billingCycle}/{order?}', MembershipCheckout::class)->name('checkout.membership');   
         Route::get('/checkout/{order}', CheckoutPage::class) ->name('checkout');
 
         Route::get('/checkout/success/{order}', function ($order) {

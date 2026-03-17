@@ -21,79 +21,152 @@
                         <h2 class="text-lg font-semibold text-gray-900">Complete Your Membership Purchase</h2>
                     </div>
 
-                    @if($paymentStep === 'method')
-                    <div class="p-6">
-                        <h3 class="text-md font-medium text-gray-900 mb-4">Payment Method</h3>
-                        
-                        <div class="space-y-4">
-                            <!-- M-PESA Option -->
-                            <label class="block border rounded-lg p-4 cursor-pointer transition-colors {{ $paymentMethod === 'mpesa' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300' }}">
-                                <div class="flex items-center">
-                                    <input type="radio" 
-                                            wire:model="paymentMethod" 
-                                            value="mpesa" 
-                                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
-                                    <div class="ml-3 flex items-center">
-                                        <img src="{{ asset('assets/frontend/images/mpesa-logo.png') }}" alt="M-PESA" class="h-8">
-                                        <span class="ml-2 text-sm font-medium text-gray-900">M-PESA</span>
-                                    </div>
+                    @if($package->isTrial())
+                        <div class="bg-white rounded-lg shadow-sm p-6 max-w-md mx-auto">
+                            <!-- Trial Header -->
+                            <div class="text-center mb-6">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                                    <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
                                 </div>
-                            </label>
+                                <h3 class="text-xl font-bold text-gray-900">Start Your Free Trial</h3>
+                                <p class="text-sm text-gray-600 mt-2">No payment required • Cancel anytime</p>
+                            </div>
 
-                            @if($paymentMethod === 'mpesa' && $showStkPushForm)
-                                <div class="ml-7 mt-4 space-y-4">
-                                    <!-- Phone Number -->
-                                    <div>
-                                        <label for="mpesaPhone" class="block text-sm font-medium text-gray-700 mb-1">
-                                            M-PESA Phone Number <span class="text-red-500">*</span>
-                                        </label>
-                                        <input type="tel" 
-                                                wire:model="mpesaPhone" 
-                                                id="mpesaPhone"
-                                                placeholder="e.g., 0712345678"
-                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                        <p class="mt-1 text-xs text-gray-500">
-                                            Enter the phone number registered with M-PESA
-                                        </p>
-                                        @error('mpesaPhone') 
-                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                        @enderror
-                                    </div>
+                            <!-- Trial Benefits -->
+                            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                                <ul class="space-y-3">
+                                    <li class="flex items-center text-sm text-gray-700">
+                                        <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span><span class="font-semibold">{{$package->trial_days?:$package->duration_days}} days</span> of full access</span>
+                                    </li>
+                                    <li class="flex items-center text-sm text-gray-700">
+                                        <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>All premium features included</span>
+                                    </li>
+                                    <li class="flex items-center text-sm text-gray-700">
+                                        <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>No credit card required</span>
+                                    </li>
+                                </ul>
+                            </div>
 
-                                    <!-- Provider Selection -->
-                                    <div style="display: none;">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                                            Network Provider
-                                        </label>
+                            <!-- Trial Terms -->
+                            <div class="text-xs text-gray-500 mb-6 text-center">
+                                By starting your trial, you agree to our 
+                                <a href="#" class="text-blue-600 hover:underline">Terms of Service</a> and 
+                                <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a>.
+                            </div>
 
-                                        <div class="grid grid-cols-3 gap-3">
-                                            <select wire:model="mpesaProvider" 
-                                                    class="w-32 px-3 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-primary-500">
-                                                <option value="safaricom">Safaricom</option>
-                                                <option value="airtel">Airtel</option>
-                                                <option value="telkom">Telkom</option>
-                                            </select>
+                            <!-- Action Buttons -->
+                            <div class="space-y-3">
+                                <button type="button" 
+                                        wire:click="paymentCompleted"
+                                        wire:loading.attr="disabled"
+                                        class="w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors duration-200">
+                                    <span wire:loading.remove wire:target="paymentCompleted">
+                                        <span class="flex items-center">
+                                            Start My Free Trial
+                                            <svg class="ml-2 -mr-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </span>
+                                    </span>
+                                    <span wire:loading wire:target="paymentCompleted" class="flex items-center">
+                                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Setting up your trial...
+                                    </span>
+                                </button>
+
+                                <a type="button" href = "{{route('membership.plans')}}"
+                                        class="w-full flex items-center justify-center px-6 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
+                                    No, thanks
+                                </a>
+                            </div>
+                        </div>
+                    @elseif($paymentStep === 'method')
+                        <div class="p-6">
+                            <h3 class="text-md font-medium text-gray-900 mb-4">Payment Method</h3>
+                            
+                            <div class="space-y-4">
+                                <!-- M-PESA Option -->
+                                <label class="block border rounded-lg p-4 cursor-pointer transition-colors {{ $paymentMethod === 'mpesa' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300' }}">
+                                    <div class="flex items-center">
+                                        <input type="radio" 
+                                                wire:model="paymentMethod" 
+                                                value="mpesa" 
+                                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                        <div class="ml-3 flex items-center">
+                                            <img src="{{ asset('assets/frontend/images/mpesa-logo.png') }}" alt="M-PESA" class="h-8">
+                                            <span class="ml-2 text-sm font-medium text-gray-900">M-PESA</span>
                                         </div>
                                     </div>
-                                </div>
-                            @endif
-                        </div>
+                                </label>
 
-                        <!-- Action Buttons -->
-                        <div class="mt-8 flex justify-between">
-                            <button type="button" 
-                                    wire:click="initiateMpesaPayment"
-                                    wire:loading.attr="disabled"
-                                    class="px-6 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50">
-                                <span wire:loading.remove wire:target="initiateMpesaPayment">
-                                    Pay KES {{ number_format($order->total, 0) }}
-                                </span>
-                                <span wire:loading wire:target="initiateMpesaPayment">
-                                    Processing...
-                                </span>
-                            </button>
-                        </div>                        
-                    </div>
+                                @if($paymentMethod === 'mpesa' && $showStkPushForm)
+                                    <div class="ml-7 mt-4 space-y-4">
+                                        <!-- Phone Number -->
+                                        <div>
+                                            <label for="mpesaPhone" class="block text-sm font-medium text-gray-700 mb-1">
+                                                M-PESA Phone Number <span class="text-red-500">*</span>
+                                            </label>
+                                            <input type="tel" 
+                                                    wire:model="mpesaPhone" 
+                                                    id="mpesaPhone"
+                                                    placeholder="e.g., 0712345678"
+                                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                            <p class="mt-1 text-xs text-gray-500">
+                                                Enter the phone number registered with M-PESA
+                                            </p>
+                                            @error('mpesaPhone') 
+                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+
+                                        <!-- Provider Selection -->
+                                        <div style="display: none;">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                Network Provider
+                                            </label>
+
+                                            <div class="grid grid-cols-3 gap-3">
+                                                <select wire:model="mpesaProvider" 
+                                                        class="w-32 px-3 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-primary-500">
+                                                    <option value="safaricom">Safaricom</option>
+                                                    <option value="airtel">Airtel</option>
+                                                    <option value="telkom">Telkom</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="mt-8 flex justify-between">
+                                <button type="button" 
+                                        wire:click="initiateMpesaPayment"
+                                        wire:loading.attr="disabled"
+                                        class="px-6 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50">
+                                    <span wire:loading.remove wire:target="initiateMpesaPayment">
+                                        Pay KES {{ number_format($order->total, 0) }}
+                                    </span>
+                                    <span wire:loading wire:target="initiateMpesaPayment">
+                                        Processing...
+                                    </span>
+                                </button>
+                            </div>                        
+                        </div>
 
                     @elseif($paymentStep === 'processing')
                         <!-- Processing Payment -->
@@ -230,30 +303,31 @@
 
                 <hr style="margin: 20px 0;" class="border-gray-200"/>
                 <!-- Manual Confirmation -->
-                <div class="p-6 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-700">
-                    <summary class="text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
-                        Pay Manually
-                    </summary>
-                    <div class="mt-4 space-y-3">
-                        <h4 class="font-medium text-gray-900 dark:text-white">DATARTECH DIGITAL SOLUTIONS</h4>
-                        <ol>
-                            <li>MPESA BUY GOODS</li>
-                            <li>TILL NUMBER: <strong>5719198</strong></li>
-                            <li>Enter Amount: <strong>{{ number_format($order->total, 0) }}</strong></li>
-                        </ol>
-                        <div class="flex space-x-2">
-                            <textarea type="text" 
-                                wire:model="transactionId"
-                                placeholder="Enter M-PESA Message or Reference No."
-                                class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
-                            <button wire:click="manualConfirmPayment"
-                                    class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700">
-                                Verify
-                            </button>
+                @if(!$package->isTrial())
+                    <div class="p-6 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-700">
+                        <summary class="text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+                            Pay Manually
+                        </summary>
+                        <div class="mt-4 space-y-3">
+                            <h4 class="font-medium text-gray-900 dark:text-white">DATARTECH DIGITAL SOLUTIONS</h4>
+                            <ol>
+                                <li>MPESA BUY GOODS</li>
+                                <li>TILL NUMBER: <strong>5719198</strong></li>
+                                <li>Enter Amount: <strong>{{ number_format($order->total, 0) }}</strong></li>
+                            </ol>
+                            <div class="flex space-x-2">
+                                <textarea type="text" 
+                                    wire:model="transactionId"
+                                    placeholder="Enter M-PESA Message or Reference No."
+                                    class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                                <button wire:click="manualConfirmPayment"
+                                        class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700">
+                                    Verify
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-
+                @endif
             </div>
 
             <!-- Order Summary -->

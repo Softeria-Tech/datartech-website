@@ -20,9 +20,10 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
@@ -70,14 +71,14 @@ class CategoryResource extends Resource
                         
                         Select::make('parent_id')
                             ->label('Parent Category')
-                            ->placeholder('None (Parent)')
+                            ->placeholder('None (Main Category)')
                             ->relationship('parent', 'name', fn (Builder $query) => 
                                 $query->whereNull('parent_id')->orderBy('name')
                             )
                             ->searchable()
                             ->preload()
                             ->columnSpan(1)
-                            ->helperText('Leave empty to create a main category'),
+                            ->helperText('Select a parent to create a subcategory, or leave empty for main category'),
                         
                         TextInput::make('sort_order')
                             ->label('Sort Order')
@@ -187,29 +188,20 @@ class CategoryResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->whereNull('parent_id')) // Only show main/parent categories
             ->columns([
                 ImageColumn::make('thumbnail')
                     ->label('')
                     ->circular()
                     ->defaultImageUrl(url('/assets/frontend/images/default-category.png'))
-                    ->size(40),
+                    ->size(25),
                 
                 TextColumn::make('name')
-                    ->label('Category')
+                    ->label('Main Category')
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
-                    ->description(fn ($record) => $record->path)
                     ->wrap(),
-                
-                TextColumn::make('parent.name')
-                    ->label('Parent')
-                    ->searchable()
-                    ->sortable()
-                    ->placeholder('Parent')
-                    ->badge()
-                    ->color('gray')
-                    ->toggleable(),
                 
                 TextColumn::make('children_count')
                     ->label('Sub-categories')
@@ -217,11 +209,14 @@ class CategoryResource extends Resource
                     ->badge()
                     ->color('info')
                     ->alignCenter()
-                    ->formatStateUsing(fn ($state) => $state > 0 ? $state : '-'),
+                    ->formatStateUsing(fn ($state) => $state > 0 ? $state : 'None'),
                 
-                TextColumn::make('resources_count')
-                    ->label('Resources')
-                    ->sortable()
+                TextColumn::make('total_resources_count')
+                    ->label('Total Resources')
+                    ->getStateUsing(function ($record) {
+                        $categoryIds = $record->getAllDescendantIds();
+                        return \App\Models\Resource::whereIn('category_id', $categoryIds)->count();
+                    })
                     ->badge()
                     ->color('success')
                     ->alignCenter(),
@@ -258,23 +253,10 @@ class CategoryResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Filter::make('is_root')
-                    ->label('Root Categories')
-                    ->toggle()
-                    ->query(fn (Builder $query) => $query->whereNull('parent_id')),
-                
                 Filter::make('has_children')
                     ->label('Has Sub-categories')
                     ->toggle()
                     ->query(fn (Builder $query) => $query->has('children')),
-                
-                SelectFilter::make('parent_id')
-                    ->label('Parent Category')
-                    ->relationship('parent', 'name', fn (Builder $query) => 
-                        $query->whereNull('parent_id')->orderBy('name')
-                    )
-                    ->searchable()
-                    ->preload(),
                 
                 Filter::make('visible')
                     ->label('Visible Only')
@@ -287,7 +269,13 @@ class CategoryResource extends Resource
                     ->query(fn (Builder $query) => $query->where('is_featured', true)),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
+                ActionGroup::make([
+                    Action::make('view_subcategories')
+                        ->label('Manage Subcategories')
+                        ->icon('heroicon-o-folder')
+                        ->color('info')
+                        ->url(fn ($record) => CategoryResource::getUrl('subcategories', ['record' => $record])),
+                    
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\DeleteAction::make()
@@ -295,21 +283,21 @@ class CategoryResource extends Resource
                         ->modalHeading('Delete Category')
                         ->modalDescription(fn ($record) => 
                             $record->hasChildren() 
-                                ? 'This category has sub-categories. Deleting it will detach all sub-categories.' 
+                                ? 'This category has sub-categories. Deleting it will also delete all sub-categories and reassign their resources.' 
                                 : 'Are you sure you want to delete this category?'
                         ),
-                    Tables\Actions\Action::make('move_up')
+                    Action::make('move_up')
                         ->label('Move Up')
                         ->icon('heroicon-o-arrow-up')
                         ->color('gray')
                         ->action(fn ($record) => static::moveOrder($record, 'up'))
                         ->visible(fn ($record) => $record->sort_order > 0),
                     
-                    Tables\Actions\Action::make('move_down')
+                    Action::make('move_down')
                         ->label('Move Down')
                         ->icon('heroicon-o-arrow-down')
                         ->color('gray')
-                        ->action(fn ($record) => static::moveOrder($record, 'down'))
+                        ->action(fn ($record) => static::moveOrder($record, 'down')),
                 ])
                 ->label('Actions')
                 ->icon('heroicon-o-chevron-down')
@@ -346,6 +334,7 @@ class CategoryResource extends Resource
             'create' => Pages\CreateCategory::route('/create'),
             'view' => Pages\ViewCategory::route('/{record}'),
             'edit' => Pages\EditCategory::route('/{record}/edit'),
+            'subcategories' => Pages\ManageSubcategories::route('/{record}/subcategories'),
         ];
     }
 
@@ -354,8 +343,8 @@ class CategoryResource extends Resource
         $currentOrder = $record->sort_order;
         $newOrder = $direction === 'up' ? $currentOrder - 1 : $currentOrder + 1;
         
-        // Find the category to swap with
-        $swapWith = Category::where('parent_id', $record->parent_id)
+        // Find the category to swap with (only among parent categories)
+        $swapWith = Category::whereNull('parent_id')
             ->where('sort_order', $newOrder)
             ->first();
         

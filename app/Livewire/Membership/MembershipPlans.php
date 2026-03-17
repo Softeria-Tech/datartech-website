@@ -1,5 +1,4 @@
 <?php
-// app/Livewire/Membership/Plans.php
 
 namespace App\Livewire\Membership;
 
@@ -8,7 +7,6 @@ use App\Models\MembershipPackage;
 use App\Models\Subscription;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Livewire\WithPagination;
 
 class MembershipPlans extends Component
 {
@@ -63,27 +61,43 @@ class MembershipPlans extends Component
 
     public function subscribe($planId, $billingCycle)
     {
-        
         $plan = MembershipPackage::findOrFail($planId);
-        
+        $this->selectedPlan = $plan;
+
         if (!Auth::check()) {
             return redirect()->route('login', ['redirect' => route('membership.plans')]);
         }
 
-        // Check if user already has active subscription
         $existingSubscription = Subscription::where('user_id', Auth::id())
             ->active()
             ->first();
 
-        if ($existingSubscription) {
+        if ($plan->isTrial()) {
+            if (MembershipPackage::userHasUsedTrial(Auth::id())) {
+                session()->flash('error', 'You have already used your trial. Please choose a paid plan to continue.');
+                return;
+            }
+
+            if ($existingSubscription && $existingSubscription->membershipPackage->isTrial()) {
+                session()->flash('warning', 'You already have an active subscription. Please cancel it before starting a trial.');
+                return;
+            }
+
+            return redirect()->route('checkout.membership', [
+                $plan->slug,
+                'monthly'
+            ]);
+        }
+
+        if ($existingSubscription && !$existingSubscription->membershipPackage->isTrial()) {
             Log::info("Subscribing to plan: $planId, billing cycle: $billingCycle, existing subscription: $existingSubscription->name");
             session()->flash('warning', 'You already have an active subscription. Please cancel it before purchasing a new one.');
             return;
         }
 
-        // Redirect to checkout with selected plan
         return redirect()->route('checkout.membership', [
-            $plan->slug,$billingCycle
+            $plan->slug,
+            $billingCycle
         ]);
     }
 
@@ -110,6 +124,19 @@ class MembershipPlans extends Component
 
     public function getPriceForCycle($plan)
     {
+        // For trial packages, always show free
+        if ($plan->isTrial()) {
+            return [
+                'original' => 0,
+                'discounted' => null,
+                'has_discount' => false,
+                'discount_percentage' => null,
+                'discount_ends_at' => null,
+                'is_trial' => true,
+                'trial_days' => $plan->trial_days ?: $plan->duration_days,
+            ];
+        }
+
         $prices = [
             'monthly' => $plan->price_monthly,
             'quarterly' => $plan->price_quarterly,
@@ -119,9 +146,9 @@ class MembershipPlans extends Component
 
         $discountPrices = [
             'monthly' => $plan->discount_price_monthly,
-            'quarterly' => $plan->price_quarterly, // Add if you have quarterly discount
+            'quarterly' => $plan->price_quarterly,
             'yearly' => $plan->discount_price_yearly,
-            'lifetime' => $plan->price_lifetime, // Lifetime usually doesn't have discount
+            'lifetime' => $plan->price_lifetime,
         ];
 
         $hasDiscount = $plan->discount_percentage > 0 && 
@@ -137,12 +164,13 @@ class MembershipPlans extends Component
             'has_discount' => $hasDiscount,
             'discount_percentage' => $plan->discount_percentage,
             'discount_ends_at' => $plan->discount_ends_at,
+            'is_trial' => false,
         ];
     }
 
     public function getSavingsPercentage($plan)
     {
-        if (!$plan->price_monthly || !$plan->price_yearly) {
+        if (!$plan->price_monthly || !$plan->price_yearly || $plan->isTrial()) {
             return null;
         }
 
@@ -157,13 +185,21 @@ class MembershipPlans extends Component
         return null;
     }
 
+    public function canUserAccessTrial()
+    {
+        if (!Auth::check()) {
+            return true; // Non-logged in users can see trial
+        }
+        return !MembershipPackage::userHasUsedTrial(Auth::id());
+    }
+
     public function render()
     {
         return view('livewire.membership.plans', [
             'plans' => $this->plans,
             'featuredPlan' => $this->featuredPlan,
-            'userSubscription' => Auth::check() ? 
-                Subscription::where('user_id', Auth::id())->active()->first() : null,
-        ])->layout('frontend.layouts.library-app');;
+            'userSubscription' => Auth::check() ? Subscription::where('user_id', Auth::id())->active()->first() : null,
+            'hasUsedTrial' => Auth::check() ? ($this->selectedPlan && $this->selectedPlan->isTrial() && MembershipPackage::userHasUsedTrial(Auth::id())) : false,
+        ])->layout('frontend.layouts.library-app');
     }
 }

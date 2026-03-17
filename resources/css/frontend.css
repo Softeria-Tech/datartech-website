@@ -442,3 +442,153 @@
 .bg-300\% {
     background-size: 300% 300%;
 }
+
+/* ---------- FLOATING WHATSAPP ICON (LEFT) ---------- */
+.whatsapp-float {
+    position: fixed;
+    /* stays in view while scrolling */
+    left: 20px;
+    /* left side spacing */
+    bottom: 30px;
+    /* distance from bottom — you can adjust */
+    background-color: #25D366;
+    /* WhatsApp brand green */
+    color: white;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 36px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), 0 4px 10px rgba(0, 130, 70, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    /* remove underline from link */
+    transition: all 0.2s ease;
+    z-index: 9999;
+    /* stay on top of everything */
+
+    /* bounce animation (infinite, gentle) */
+    animation: whatsapp-bounce 2.2s ease-in-out infinite;
+
+    /* optional subtle glow */
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Hover effect – stops the bounce, slight scale, stronger shadow */
+.whatsapp-float:hover {
+    animation-play-state: paused;
+    /* pause bounce on hover */
+    background-color: #20b859;
+    /* slightly darker green */
+    transform: scale(1.08);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Focus state for accessibility */
+.whatsapp-float:focus-visible {
+    outline: 4px solid #ffffff;
+    outline-offset: 2px;
+}
+
+/* bounce keyframes */
+@keyframes whatsapp-bounce {
+    0% {
+        transform: translateY(0);
+    }
+
+    10% {
+        transform: translateY(-8px);
+    }
+
+    20% {
+        transform: translateY(0);
+    }
+
+    30% {
+        transform: translateY(-4px);
+    }
+
+    40% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-2px);
+    }
+
+    60% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+
+    /* total: two small bounces then settle, repeated */
+}
+
+/* optional tooltip/pop on the side — if you want to show the number */
+.whatsapp-float .tooltip-text {
+    position: absolute;
+    left: 74px;
+    /* icon width + gap */
+    bottom: 12px;
+    background: #1f2e2a;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 30px;
+    white-space: nowrap;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    /* so it doesn't block clicks */
+    opacity: 0;
+    transition: opacity 0.2s ease 0.3s;
+    font-family: 'Segoe UI', monospace;
+    letter-spacing: 0.3px;
+}
+
+.whatsapp-float:hover .tooltip-text {
+    opacity: 1;
+}
+
+/* optional arrow for the tooltip */
+.whatsapp-float .tooltip-text::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 6px 6px 6px 0;
+    border-style: solid;
+    border-color: transparent #1f2e2a transparent transparent;
+}
+
+/* make sure icon itself is crisp */
+.whatsapp-float i {
+    line-height: 1;
+    display: block;
+    margin-left: 2px;
+    /* tiny optical adjustment */
+}
+
+/* If you prefer the icon to be a bit smaller on very small screens */
+@media (max-width: 480px) {
+    .whatsapp-float {
+        width: 56px;
+        height: 56px;
+        font-size: 32px;
+        left: 16px;
+        bottom: 24px;
+    }
+
+    .whatsapp-float .tooltip-text {
+        left: 66px;
+        font-size: 0.75rem;
+        padding: 4px 10px;
+    }
+}

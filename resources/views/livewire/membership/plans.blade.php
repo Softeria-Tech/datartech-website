@@ -1,8 +1,8 @@
-
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-        <!-- Billing Cycle Toggle -->
+        <!-- Billing Cycle Toggle - Hide for trial packages -->
+        @if($plans->where('price_monthly', '>', 0)->count() > 0)
         <div class="flex justify-center mb-10">
             <div class="relative bg-gray-100 rounded-lg p-1 flex">
                 <button wire:click="selectBillingCycle('monthly')"
@@ -25,7 +25,7 @@
                                   ? 'bg-white text-gray-900 shadow' 
                                   : 'text-gray-700 hover:text-gray-900' }}">
                     Yearly
-                    @if($featuredPlan && $this->getSavingsPercentage($featuredPlan))
+                    @if($featuredPlan && $this->getSavingsPercentage($featuredPlan) && !$featuredPlan->isTrial())
                         <span class="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                             Save {{ $this->getSavingsPercentage($featuredPlan) }}%
                         </span>
@@ -40,20 +40,41 @@
                 </button>
             </div>
         </div>
+        @endif
 
         <!-- Search Bar (Optional for many plans) -->
         @if($plans->count() > 3)
-        <div class="max-w-md mx-auto mb-10">
-            <div class="relative">
-                <input type="text" 
-                       wire:model.live.debounce.300ms="search" 
-                       placeholder="Search plans..."
-                       class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
+            <div class="max-w-md mx-auto mb-10">
+                <div class="relative">
+                    <input type="text" 
+                        wire:model.live.debounce.300ms="search" 
+                        placeholder="Search plans..."
+                        class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
             </div>
-        </div>
+        @endif
+
+        <!-- Trial Used Warning -->
+        @if($hasUsedTrial || session('warning') || session('error'))
+            <div class="max-w-2xl mx-auto mb-8">
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-700" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm">
+                                {{ session('warning') ?? session('error') ?? "You've already used your trial. Choose a paid plan to continue enjoying our content." }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         @endif
 
         <!-- Plans Grid -->
@@ -64,11 +85,14 @@
                     $isPopular = $plan->is_popular;
                     $savings = $this->getSavingsPercentage($plan);
                     $isInCompare = in_array($plan->id, $comparePlans);
+                    $isTrial = $plan->isTrial();
+                    $userCanAccessTrial = $this->canUserAccessTrial();
                 @endphp
 
                 <div wire:key="plan-{{ $plan->id }}" 
                      class="relative flex flex-col rounded-2xl border {{ $isPopular ? 'border-blue-500 shadow-xl' : 'border-gray-200' }} 
-                            bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                            bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1
+                            {{ $isTrial ? 'border-2 border-green-500' : '' }}">
                     
                     <!-- Popular Badge -->
                     @if($isPopular)
@@ -79,7 +103,17 @@
                         </div>
                     @endif
 
-                    <!-- Compare Checkbox -->
+                    <!-- Trial Badge -->
+                    @if($isTrial)
+                        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                            <span class="inline-flex px-4 py-1 text-xs font-semibold tracking-wide text-white bg-green-500 rounded-full">
+                                Free Trial
+                            </span>
+                        </div>
+                    @endif
+
+                    <!-- Compare Checkbox - Hide for trial if user already used it -->
+                    @if(!$isTrial || ($isTrial && $userCanAccessTrial))
                     <div class="absolute top-4 right-4">
                         <button wire:click="toggleCompare({{ $plan->id }})"
                                 class="p-1 rounded-full hover:bg-gray-100 transition-colors">
@@ -91,6 +125,7 @@
                             </svg>
                         </button>
                     </div>
+                    @endif
 
                     <div class="p-8">
                         <!-- Plan Name & Description -->
@@ -99,44 +134,58 @@
 
                         <!-- Price -->
                         <div class="mt-6">
-                            @if($priceData['original'])
-                                <div class="flex items-baseline">
-                                    <span class="text-5xl font-extrabold tracking-tight text-gray-900">
-                                         {{ number_format($priceData['discounted'] ?? $priceData['original'], 0) }}
-                                    </span><br>
-                                    <span class="ml-1 text-sm font-medium text-gray-400">
-                                        /{{ $selectedBillingCycle === 'lifetime' ? 'once' : $selectedBillingCycle }}
-                                    </span>
-                                </div>
-                                
-                                @if($priceData['discounted'])
-                                    <div class="mt-2">
-                                        <span class="text-sm text-gray-500 line-through">
-                                            {{ number_format($priceData['original'], 0) }}
+                            @if($priceData['original'] !== null)
+                                @if($isTrial)
+                                    <div class="flex items-baseline">
+                                        <span class="text-5xl font-extrabold tracking-tight text-green-600">
+                                            Free
                                         </span>
-                                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Save {{ $priceData['discount_percentage'] }}%
+                                        <span class="ml-1 text-sm font-medium text-gray-400">
+                                            /{{ $priceData['trial_days'] }} days
                                         </span>
-                                        @if($priceData['discount_ends_at'])
-                                            <p class="text-xs text-orange-600 mt-1">
-                                                Offer ends {{ $priceData['discount_ends_at']->diffForHumans() }}
-                                            </p>
-                                        @endif
                                     </div>
-                                @endif
-
-                                @if($savings && $selectedBillingCycle === 'yearly' && !$priceData['discounted'])
-                                    <p class="mt-2 text-sm text-green-600">
-                                        Save {{ $savings }}% compared to monthly
+                                    <p class="mt-2 text-sm text-gray-600">
+                                        No credit card required
                                     </p>
+                                @else
+                                    <div class="flex items-baseline">
+                                        <span class="text-5xl font-extrabold tracking-tight text-gray-900">
+                                            {{ number_format($priceData['discounted'] ?? $priceData['original'], 0) }}
+                                        </span>
+                                        <span class="ml-1 text-sm font-medium text-gray-400">
+                                            /{{ $selectedBillingCycle === 'lifetime' ? 'once' : $selectedBillingCycle }}
+                                        </span>
+                                    </div>
+                                    
+                                    @if($priceData['discounted'])
+                                        <div class="mt-2">
+                                            <span class="text-sm text-gray-500 line-through">
+                                                {{ number_format($priceData['original'], 0) }}
+                                            </span>
+                                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Save {{ $priceData['discount_percentage'] }}%
+                                            </span>
+                                            @if($priceData['discount_ends_at'])
+                                                <p class="text-xs text-orange-600 mt-1">
+                                                    Offer ends {{ $priceData['discount_ends_at']->diffForHumans() }}
+                                                </p>
+                                            @endif
+                                        </div>
+                                    @endif
+
+                                    @if($savings && $selectedBillingCycle === 'yearly' && !$priceData['discounted'])
+                                        <p class="mt-2 text-sm text-green-600">
+                                            Save {{ $savings }}% compared to monthly
+                                        </p>
+                                    @endif
                                 @endif
                             @else
                                 <p class="text-2xl text-gray-400">Not available</p>
                             @endif
                         </div>
 
-                        <!-- Trial Info -->
-                        @if($plan->trial_days > 0)
+                        <!-- Trial Info for non-trial plans -->
+                        @if(!$isTrial && $plan->trial_days > 0)
                             <p class="mt-4 text-sm text-blue-600 font-medium">
                                 {{ $plan->trial_days }}-day free trial
                             </p>
@@ -167,17 +216,33 @@
 
                         <!-- Action Buttons -->
                         <div class="mt-8 space-y-3">
-                            @if($priceData['original'])
-                                <button wire:click="subscribe({{ $plan->id }}, '{{ $selectedBillingCycle }}')"
-                                        class="w-full flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md 
-                                               {{ $isPopular 
-                                                  ? 'text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700' 
-                                                  : 'text-blue-700 bg-blue-100 hover:bg-blue-200' }} 
-                                               transition-all duration-200">
-                                    Get Started
-                                    <svg class="ml-2 -mr-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                    </svg>
+                            @if($priceData['original'] !== null)
+                                @if($isTrial && !$userCanAccessTrial)
+                                    <button disabled
+                                            class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed">
+                                        Trial Already Used
+                                    </button>
+                                @else
+                                    <button wire:click="subscribe({{ $plan->id }}, '{{ $selectedBillingCycle }}')"
+                                            class="w-full flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md 
+                                                   {{ $isPopular || $isTrial
+                                                      ? 'text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700' 
+                                                      : 'text-blue-700 bg-blue-100 hover:bg-blue-200' }} 
+                                                   transition-all duration-200">
+                                        @if($isTrial)
+                                            Start Free Trial
+                                        @else
+                                            Get Started
+                                        @endif
+                                        <svg class="ml-2 -mr-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                @endif
+                                
+                                <button wire:click="viewDetails({{ $plan->id }})"
+                                        class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                                    View Details
                                 </button>
                             @else
                                 <button disabled
@@ -185,11 +250,6 @@
                                     Coming Soon
                                 </button>
                             @endif
-                            
-                            <button wire:click="viewDetails({{ $plan->id }})"
-                                    class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                                View Details
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -249,6 +309,11 @@
                                                                     Popular
                                                                 </span>
                                                             @endif
+                                                            @if($plan->isTrial())
+                                                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                                    Trial
+                                                                </span>
+                                                            @endif
                                                         </th>
                                                     @endforeach
                                                 </tr>
@@ -257,7 +322,7 @@
                                                 <!-- Price Row -->
                                                 <tr>
                                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                        Price ({{ ucfirst($selectedBillingCycle) }})
+                                                        Price
                                                     </td>
                                                     @foreach($comparePlans as $planId)
                                                         @php 
@@ -265,13 +330,18 @@
                                                             $priceData = $this->getPriceForCycle($plan);
                                                         @endphp
                                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
-                                                            @if($priceData['original'])
-                                                                @if($priceData['discounted'])
-                                                                    <span class="line-through text-gray-400">${{ number_format($priceData['original'], 0) }}</span>
-                                                                    <br>
-                                                                    <span class="font-bold text-green-600">${{ number_format($priceData['discounted'], 0) }}</span>
+                                                            @if($priceData['original'] !== null)
+                                                                @if($plan->isTrial())
+                                                                    <span class="font-bold text-green-600">Free for {{ $priceData['trial_days'] }} days</span>
                                                                 @else
-                                                                    {{ number_format($priceData['original'], 0) }}
+                                                                    @if($priceData['discounted'])
+                                                                        <span class="line-through text-gray-400">${{ number_format($priceData['original'], 0) }}</span>
+                                                                        <br>
+                                                                        <span class="font-bold text-green-600">${{ number_format($priceData['discounted'], 0) }}</span>
+                                                                    @else
+                                                                        ${{ number_format($priceData['original'], 0) }}
+                                                                    @endif
+                                                                    <span class="text-xs text-gray-400">/{{ $selectedBillingCycle }}</span>
                                                                 @endif
                                                             @else
                                                                 -
@@ -431,31 +501,47 @@
             </div>
         </div>
 
-        <!-- Call to Action -->
-        @if(!Auth::check())
-            <div class="mt-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl overflow-hidden">
+        <!-- Trial CTA for non-logged in users -->
+        @if(!Auth::check() && getTrialPackage())
+            <div class="mt-20 bg-gradient-to-r from-green-600 to-teal-600 rounded-2xl shadow-xl overflow-hidden">
                 <div class="px-6 py-12 sm:px-12 sm:py-16 lg:flex lg:items-center lg:justify-between">
                     <div>
                         <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-                            <span class="block">Ready to get started?</span>
-                            <span class="block text-blue-200">Join thousands of creative professionals.</span>
+                            <span class="block">Try before you buy!</span>
+                            <span class="block text-green-200">Get {{ getTrialPackage()->trial_days ?: getTrialPackage()->duration_days }} days free access.</span>
                         </h2>
-                        <p class="mt-4 text-lg leading-6 text-blue-100">
-                            Get instant access to our entire library of premium resources.
+                        <p class="mt-4 text-lg leading-6 text-green-100">
+                            No credit card required. Cancel anytime.
                         </p>
                     </div>
                     <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
                         <div class="inline-flex rounded-md shadow">
                             <a href="{{ route('register') }}" 
-                               class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50">
-                                Create Free Account
+                               class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-gray-50">
+                                Start Free Trial
                             </a>
                         </div>
-                        <div class="ml-3 inline-flex rounded-md shadow">
-                            <a href="{{ route('login') }}" 
-                               class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-800 bg-opacity-50 hover:bg-opacity-60">
-                                Sign In
-                            </a>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- Regular CTA for logged in users who haven't used trial -->
+        @if(Auth::check() && !$hasUsedTrial && getTrialPackage())
+            <div class="mt-20 bg-gradient-to-r from-green-600 to-teal-600 rounded-2xl shadow-xl overflow-hidden">
+                <div class="px-6 py-12 sm:px-12 sm:py-16 lg:flex lg:items-center lg:justify-between">
+                    <div>
+                        <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                            <span class="block">Ready to start your trial?</span>
+                            <span class="block text-green-200">Get {{ getTrialPackage()->trial_days ?: getTrialPackage()->duration_days }} days free access.</span>
+                        </h2>
+                    </div>
+                    <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
+                        <div class="inline-flex rounded-md shadow">
+                            <button wire:click="subscribe({{ getTrialPackage()->id }}, 'trial')"
+                                    class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-gray-50">
+                                Start Free Trial
+                            </button>
                         </div>
                     </div>
                 </div>

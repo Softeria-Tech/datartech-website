@@ -16,7 +16,7 @@ class ListCategories extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('New Category')
+                ->label('New Main Category')
                 ->icon('heroicon-o-plus'),
         ];
     }
@@ -24,11 +24,11 @@ class ListCategories extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make('All Categories'),
-            'root' => Tab::make('Main Categories')
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereNull('parent_id')),
-            'sub' => Tab::make('Sub-categories')
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereNotNull('parent_id')),
+            'all' => Tab::make('All Main Categories'),
+            'with_subcategories' => Tab::make('With Subcategories')
+                ->modifyQueryUsing(fn (Builder $query) => $query->has('children')),
+            'without_subcategories' => Tab::make('Without Subcategories')
+                ->modifyQueryUsing(fn (Builder $query) => $query->doesntHave('children')),
             'visible' => Tab::make('Visible')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('is_visible', true)),
             'featured' => Tab::make('Featured')

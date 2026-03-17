@@ -10,7 +10,7 @@
             </li>
             <li class="text-gray-400">/</li>
             <li>
-                <a href="{{ route('library.landing') }}" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+                <a href="{{ route('home') }}" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
                     Library
                 </a>
             </li>
@@ -160,7 +160,7 @@
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 Try adjusting your search or browse other categories.
             </p>
-            <a href="{{ route('library.landing') }}" 
+            <a href="{{ route('home') }}" 
                class="mt-4 inline-flex items-center px-4 py-2 bg-secondary-600 hover:bg-secondary-700 text-white text-sm font-medium rounded-lg transition">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />

@@ -16,13 +16,16 @@
 
             <!-- Navigation Links -->
             <div class="hidden md:flex items-center space-x-8">
+                <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600' : 'text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400' }} px-3 py-2 text-sm font-medium transition">
+                    Home
+                </a>
                 <a href="{{ route('library.resources') }}" 
                    class="{{ request()->routeIs('library.*') ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600' : 'text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400' }} px-3 py-2 text-sm font-medium transition">
                     Resources
                 </a>
                 <a href="{{ route('membership.plans') }}" 
-                   class="{{ request()->routeIs('subscription.*') ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600' : 'text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400' }} px-3 py-2 text-sm font-medium transition">
-                    Membership
+                   class="{{ request()->routeIs('membership.*') ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600' : 'text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400' }} px-3 py-2 text-sm font-medium transition">
+                    Memberships
                 </a>
                 <a href="{{ route('about-us') }}" 
                    class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 text-sm font-medium transition">

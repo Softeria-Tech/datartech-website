@@ -15,6 +15,18 @@ class MembershipPackage extends Model
     }
 
     /**
+     * Check if this is a trial package
+     */
+    public function isTrial()
+    {
+        return $this->is_trial || (
+            $this->price_monthly == 0 && 
+            $this->price_yearly == 0 && 
+            $this->price_quarterly == 0 && 
+            $this->price_lifetime == 0);
+    }
+
+    /**
      * @return bool|Carbon
      */
     public function calculateEndDate($amount, $startDate=false)
@@ -22,6 +34,16 @@ class MembershipPackage extends Model
         if(!$startDate){
             $startDate = Carbon::now();
         }
+
+        // Handle trial packages - always return trial period
+        if ($this->isTrial()) {
+            return [
+                'ends_at' => $startDate->copy()->addDays($this->trial_days ?: 14), // Default to 14 days if not set
+                'next_billing_at' => null, // Trial doesn't auto-renew
+                'billing_cycle' => 'trial',
+            ];
+        }
+
         if($amount==$this->price_monthly){
             return [
                 'ends_at' =>$startDate->copy()->addMonth(),
@@ -52,5 +74,36 @@ class MembershipPackage extends Model
         }
         Log::warning("Amount Not Recognized:::" . $amount);
         return false;
+    }
+
+    /**
+     * Check if user has already used a trial
+     */
+    public static function userHasUsedTrial($userId)
+    {
+        $plan = self::getTrialPackage();
+        if(!$plan) return false;
+
+        return Subscription::active()
+                ->where('user_id', $userId)
+                ->where('membership_package_id', $plan->id)
+                ->exists();
+    }
+    /**
+     * Get the trial package (either by is_trial flag OR zero prices)
+     */
+    public static function getTrialPackage(): ?self
+    {
+        return self::where('is_active', true)
+            ->where(function ($query) {
+                $query->where('is_trial', true)
+                    ->orWhere(function ($q) {
+                        $q->where(fn($inner) => $inner->where('price_monthly', 0)->orWhereNull('price_monthly'))
+                        ->where(fn($inner) => $inner->where('price_yearly', 0)->orWhereNull('price_yearly'))
+                        ->where(fn($inner) => $inner->where('price_quarterly', 0)->orWhereNull('price_quarterly'))
+                        ->where(fn($inner) => $inner->where('price_lifetime', 0)->orWhereNull('price_lifetime'));
+                    });
+            })
+            ->first();
     }
 }

@@ -12,14 +12,9 @@ class CheckoutController extends Controller
 {
     public function membershipSuccess($orderNumber)
     {
-        $order = Order::where('order_number', $orderNumber)
-            ->where('user_id', Auth::id())
-            ->with('user')
-            ->firstOrFail();
-            
+        $order = Order::where('order_number', $orderNumber)->where('user_id', Auth::id())->with('user')->firstOrFail();
         $subscription = Subscription::where('order_id', $order->id)->firstOrFail();
-            
-        return view('checkout.membership-success', compact('order', 'subscription'));
+        return view('livewire.checkout.membership-success', compact('order', 'subscription'));
     }
 
     /**

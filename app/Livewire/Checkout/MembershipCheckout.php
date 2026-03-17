@@ -47,13 +47,11 @@ class MembershipCheckout extends MpesaApi
             
         $this->billingCycle = $billingCycle;
         
-        // Check if we're resuming an existing order
-        if ($order) {
+        if ($order && $this->isOrderValid($order)) {
             $this->orderNumber = $order;
             if($this->loadOrder()){
                 return;
-            }
-            
+            }            
         }
         
         $this->calculatePrices();
@@ -61,25 +59,39 @@ class MembershipCheckout extends MpesaApi
         $this->initiateGateway();
     }
 
+    function isOrderValid($orderNumber){
+        $existingOrder = Order::where('order_number', $orderNumber)
+                ->where('user_id', Auth::id())->whereIn('payment_status', ['pending', 'pending_verification'])
+                ->first();
+
+        if(!$existingOrder) return false;
+
+        return $existingOrder->order_data['package_id'] == $this->package->id;
+    }
+
     public function calculatePrices()
     {
-        $priceField = "price_{$this->billingCycle}";
-        $discountField = "discount_price_{$this->billingCycle}";
+        if($this->package->isTrial()){
+            $priceField = "price_monthly";
+            $discountField = "discount_price_monthly";
+            $basePrice = 0;
+
+            $this->subtotal = 0;
+            $this->tax = 0;
+            $this->total = 0;
+        }else{
+            $priceField = "price_{$this->billingCycle}";
+            $discountField = "discount_price_{$this->billingCycle}";            
+            $basePrice = $this->package->$priceField;       
         
-        $basePrice = $this->package->$priceField;
-        
-        // Apply discount if available
-        $hasDiscount = $this->package->discount_percentage > 0 && 
-                      $this->package->discount_ends_at && 
-                      now()->lt($this->package->discount_ends_at);
-                      
-        $finalPrice = $hasDiscount && $this->package->$discountField 
-            ? $this->package->$discountField 
-            : $basePrice;
-        
-        $this->subtotal = $finalPrice;
-        $this->tax = round($finalPrice * ($this->taxRate / 100), 2);
-        $this->total = $this->subtotal + $this->tax;
+            $hasDiscount = $this->package->discount_percentage > 0 && $this->package->discount_ends_at &&  now()->lt($this->package->discount_ends_at);
+                        
+            $finalPrice = $hasDiscount && $this->package->$discountField ? $this->package->$discountField : $basePrice;
+            
+            $this->subtotal = $finalPrice;
+            $this->tax = round($finalPrice * ($this->taxRate / 100), 2);
+            $this->total = $this->subtotal + $this->tax;
+        }
     }
 
     public function loadOrder()
@@ -122,11 +134,7 @@ class MembershipCheckout extends MpesaApi
 
     public function createOrder()
     {
-        $this->order = Order::firstOrCreate([
-            'user_id' => Auth::id(),
-            'resource_id' => null,
-            'order_status' => 'processing',
-        ],[
+        $orderData = [
             'order_number' => 'MEM-' . strtoupper(uniqid()),
             'user_id' => Auth::id(),
             'subtotal' => $this->subtotal,
@@ -143,11 +151,17 @@ class MembershipCheckout extends MpesaApi
                 'trial_days' => $this->package->trial_days,
                 'features' => $this->package->features,
             ],
-        ]);
+        ];
+        $this->order = Order::firstOrCreate([
+            'user_id' => Auth::id(),
+            'resource_id' => null,
+            'order_status' => 'processing',
+        ],$orderData);
+
+        $this->order->update($orderData);
         
         $this->orderNumber = $this->order->order_number;
 
-        // Pre-fill phone if available
         if (isset($this->order->order_data['mpesa_phone'])) {            
             $this->mpesaPhone = $this->order->order_data['mpesa_phone'];
         }

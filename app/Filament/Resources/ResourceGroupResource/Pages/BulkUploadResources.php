@@ -92,10 +92,15 @@ class BulkUploadResources extends Page implements HasForms
                                     ->default(false)
                                     ->helperText('Auto-publish uploaded resources'),
                                     
+                                Components\Toggle::make('requires_subscription')
+                                    ->default(false)
+                                    ->helperText('Resources Available to subscribers only'),
+                                    
                                 Components\Toggle::make('create_subgroups')
                                     ->label('Create Subgroups from Folders')
                                     ->default(true)
                                     ->helperText('Automatically create subgroups based on folder structure'),
+
                                     
                                 Components\Toggle::make('extract_zip')
                                     ->label('Extract ZIP Archives')
@@ -277,6 +282,7 @@ class BulkUploadResources extends Page implements HasForms
                     'category_id' => $data['default_category_id'],
                     'price' => $data['default_price'] ?? 0,
                     'is_published' => $data['default_published'] ?? false,
+                    'requires_subscription' => $data['requires_subscription'] ?? false,
                     'delivery_type' => 'upload',
                     'file_path' => $newPath,
                     'file_name' => $fileName,
