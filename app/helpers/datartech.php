@@ -102,4 +102,22 @@ if(!function_exists('hasHitDownloadLimit')){
             return MembershipPackage::getTrialPackage();
         }
     }
+
+    if(!function_exists('optimizePhone')){
+        function optimizePhone($phone){
+            $phone = preg_replace('/[^0-9]/', '', $phone);
+
+            if (str_starts_with($phone, '0')) {
+                $phone= '254' . substr($phone, 1);
+            }
+
+            if (strlen($phone) === 9 && (str_starts_with($phone, '7') || str_starts_with($phone, '1'))) {
+                $phone=  '254' . $phone;
+            } 
+            if(substr($phone,0,3)=='254'){
+                $phone = '0'. substr($phone, 3);
+            }
+            return $phone;
+        } 
+    }
 }

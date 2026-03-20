@@ -441,4 +441,5 @@
     </div>
 
     @include('livewire.library.resource_models')
+    @include('frontend.layouts.partials.loading-indicator')
 </div>

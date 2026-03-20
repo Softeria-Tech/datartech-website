@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\PhoneVerifiedMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,6 +17,7 @@ $app= Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'verify.phone' => PhoneVerifiedMiddleware::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

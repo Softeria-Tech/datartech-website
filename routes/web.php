@@ -36,7 +36,7 @@ Route::middleware('web')->group(function(){
     Route::get('shop/product-details/{product_id}', [FrontendController::class, 'productDetails'])->name('product-details');
     Route::get('product-categories/{category_id}', [FrontendController::class, 'productCategories'])->name('product-categories');
 
-    Route::middleware(['auth', 'verified'])->group(function(){
+    Route::middleware(['auth', 'verify.phone'])->group(function(){
 
         Route::get('logout', [DashboardController::class, 'logout'])->name('logout');    
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

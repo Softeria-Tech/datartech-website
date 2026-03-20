@@ -37,7 +37,7 @@
     <!-- Page Content -->
     <main class="min-h-screen">
         {{ $slot }}
-        @yield('content')
+        @yield('content')        
     </main>
 
     <!-- Footer -->

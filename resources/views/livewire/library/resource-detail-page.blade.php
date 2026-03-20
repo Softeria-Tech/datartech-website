@@ -323,6 +323,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 
     {{-- Related Resources --}}
@@ -602,4 +603,7 @@
             </div>
         </div>
     @endif
+
+   
+    @include('frontend.layouts.partials.loading-indicator')
 </div>

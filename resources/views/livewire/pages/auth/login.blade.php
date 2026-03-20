@@ -110,4 +110,6 @@ new #[Layout('layouts.guest')] class extends Component
         and 
         <a href="#" class="underline hover:text-gray-700 dark:hover:text-gray-300">Privacy Policy</a>
     </p>
+
+    @include('frontend.layouts.partials.loading-indicator')
 </div>
