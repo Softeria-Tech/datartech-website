@@ -243,6 +243,15 @@ class ResourceDetailPage extends Component
         trackDownload($resource->id);
     }
 
+    public function markAndDownload()
+    {
+        // Mark as downloaded
+        $this->markDownloaded();
+        
+        // Trigger download via JavaScript
+        $this->dispatch('trigger-download', url: $this->getDownloadUrl());
+    }
+
     public function render()
     {
         return view('livewire.library.resource-detail-page', [

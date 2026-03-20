@@ -19,11 +19,14 @@ class MembershipPackage extends Model
      */
     public function isTrial()
     {
-        return $this->is_trial || (
-            $this->price_monthly == 0 && 
-            $this->price_yearly == 0 && 
-            $this->price_quarterly == 0 && 
-            $this->price_lifetime == 0);
+        $isTrial= $this->is_trial || (
+            (empty($this->price_monthly) || $this->price_monthly==0) && 
+            (empty($this->price_yearly) ||  $this->price_yearly==0)&& 
+            (empty($this->price_quarterly) || $this->price_quarterly==0) && 
+            (empty($this->price_lifetime) || $this->price_lifetime==0));
+
+        //Log::info("isTrial",['trial'=>$isTrial,'id'=>$this->id]);
+        return $isTrial;
     }
 
     /**

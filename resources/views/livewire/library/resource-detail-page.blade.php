@@ -242,8 +242,7 @@
                                     <span class="font-medium">You own this resource</span>
                                 </div>
                                 @if(!$limitReached)
-                                    <a wire:click="markDownloaded" target="_blank"  href="{{ $downloadUrl }}"
-                                    class="block w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white text-center font-medium rounded-lg transition">
+                                    <a wire:click="markAndDownload" class="block w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white text-center font-medium rounded-lg transition cursor-pointer">
                                         Download Now
                                     </a>
                                 @else

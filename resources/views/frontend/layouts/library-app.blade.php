@@ -78,5 +78,12 @@
             }, 5000);
         });
     </script>
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('trigger-download', (event) => {
+                window.open(event.url, '_blank');
+            });
+        });
+    </script>
 </body>
 </html>

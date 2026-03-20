@@ -3,15 +3,12 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\MembershipPackageResource\Pages;
-use App\Filament\Resources\MembershipPackageResource\RelationManagers;
 use App\Models\MembershipPackage;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class MembershipPackageResource extends Resource
 {
@@ -99,23 +96,41 @@ class MembershipPackageResource extends Resource
                 /*Tables\Columns\TextColumn::make('slug')
                     ->searchable(),*/
                 Tables\Columns\TextColumn::make('price_monthly')
-                    ->numeric()
                     ->label('Monthly')
-                    ->sortable(),
+                    ->getStateUsing(function ($record) {
+                        if ($record->isTrial()) {
+                            return 'Free Trial';
+                        }
+                        
+                        $state = $record->price_monthly;
+                        return is_numeric($state) ? number_format($state) : ($state ?? '0');
+                    })
+                    ->sortable()
+                    ->badge()
+                    ->color('success'),
                 Tables\Columns\TextColumn::make('price_yearly')
                     ->numeric()
                     ->label('Yearly')
+                    ->default(0)
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->badge()
+                    ->color('success'),
                 Tables\Columns\TextColumn::make('price_quarterly')
                     ->numeric()
                     ->label('Quarterly')
+                    ->default(0)
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->badge()
+                    ->color('success'),
                 Tables\Columns\TextColumn::make('price_lifetime')
                     ->numeric()
                     ->label('Lifetime')
-                    ->sortable(),
+                    ->default(0)
+                    ->sortable()
+                    ->badge()
+                    ->color('success'),
                 Tables\Columns\TextColumn::make('discount_percentage')
                     ->numeric()
                     ->label('Disc %')
