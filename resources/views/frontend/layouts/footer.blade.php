@@ -1,6 +1,6 @@
   <!-- =====Footer section===== -->
   @php
-      $service_categories = App\Models\ServiceCategory::with('services')->get();
+      $service_categories = [];
   @endphp
   <footer>
       <div class="container">

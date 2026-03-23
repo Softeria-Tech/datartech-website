@@ -162,7 +162,7 @@ new #[Layout('frontend.layouts.library-app')] class extends Component
 <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg" style="margin-top: 100px; margin-bottom: 100px;">
     <div class="text-center mb-6">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Verify Your Phone
+            {{auth()->user()->name}}, Verify Your Phone
         </h2>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Enter your phone number to receive verification code

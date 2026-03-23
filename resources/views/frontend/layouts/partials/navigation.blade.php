@@ -27,13 +27,13 @@
                    class="{{ request()->routeIs('membership.*') ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600' : 'text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400' }} px-3 py-2 text-sm font-medium transition">
                     Memberships
                 </a>
-                <a href="{{ route('about-us') }}" 
+                {{-- <a href="{{ route('about-us') }}" 
                    class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 text-sm font-medium transition">
                     About
-                </a>
-                <a href="{{ route('contact-us') }}" 
+                </a> --}}
+                <a href="#" 
                    class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 text-sm font-medium transition">
-                    Contact
+                    Support
                 </a>
             </div>
 
@@ -50,14 +50,7 @@
                 </button>
 
                 @auth
-                    <!-- Notifications -->
-                    <button class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition relative">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-600 rounded-full"></span>
-                    </button>
-
+                    
                     <!-- User Menu -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" class="flex items-center space-x-2 focus:outline-none">
