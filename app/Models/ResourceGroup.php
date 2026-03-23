@@ -43,9 +43,9 @@ class ResourceGroup extends Model
     public function getFullPathAttribute(): string
     {
         if ($this->parent) {
-            return $this->parent->full_path . '/' . $this->slug;
+            return $this->parent->full_path . '/' . $this->name;
         }
-        return $this->slug;
+        return $this->name;
     }
 
     public function getAllDescendantIds(): array

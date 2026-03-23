@@ -41,7 +41,7 @@ class ResourceGroupResource extends Resource
                                             ->maxLength(255)
                                             ->live(onBlur: true)
                                             ->afterStateUpdated(fn (Forms\Set $set, ?string $state) => 
-                                                $set('slug', Str::slug($state))
+                                                $set('slug', Str::slug($state).'-'.uniqid())
                                             ),
                                             
                                         Forms\Components\TextInput::make('slug')
@@ -123,7 +123,6 @@ class ResourceGroupResource extends Resource
                     
                 Tables\Columns\TextColumn::make('full_path')
                     ->label('Path')
-                    ->searchable()
                     ->color('gray')
                     ->size('sm'),
                     

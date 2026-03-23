@@ -43,7 +43,7 @@ class ManageSubcategories extends ManageRelatedRecords
                             ->maxLength(255)
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn ($state, callable $set) => 
-                                $set('slug', Str::slug($state))
+                                $set('slug', Str::slug($state).'-'.$this->getRecord()->id)
                             ),
                         
                         Forms\Components\TextInput::make('slug')
