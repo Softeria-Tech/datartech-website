@@ -12,6 +12,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Tabs\Tab;
+use Illuminate\Database\Eloquent\Builder;
 
 class ResourceGroupResource extends Resource
 {
@@ -117,14 +118,26 @@ class ResourceGroupResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable()
-                    ->formatStateUsing(fn ($state, $record) => 
-                        str_repeat('— ', $record->parent ? 1 : 0) . ' ' . $state
-                    ),
+                    /*->formatStateUsing(fn ($state, $record) => 
+                        str_repeat('— ', $record->depth) . ' ' . $state
+                    )*/,
+                    
+                Tables\Columns\TextColumn::make('level_name')
+                    ->label('Level')
+                    ->badge()
+                    ->color(fn ($record) => match($record->depth) {
+                        0 => 'success',
+                        1 => 'info',
+                        2 => 'warning',
+                        3 => 'danger',
+                        default => 'gray',
+                    }),
                     
                 Tables\Columns\TextColumn::make('full_path')
                     ->label('Path')
                     ->color('gray')
-                    ->size('sm'),
+                    ->size('sm')
+                    ->searchable(),
                     
                 Tables\Columns\TextColumn::make('resources_count')
                     ->label('Resources')
@@ -155,6 +168,36 @@ class ResourceGroupResource extends Resource
                     
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Active Status'),
+                    
+                Tables\Filters\SelectFilter::make('depth')
+                    ->label('Level')
+                    ->options([
+                        0 => 'Parent Groups',
+                        1 => 'Sub Groups',
+                        2 => 'Grand Groups',
+                        3 => '4th Degree Groups',
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        if ($data['value'] !== null) {
+                            $depth = (int) $data['value'];
+                            if ($depth === 0) {
+                                $query->whereNull('parent_id');
+                            } elseif ($depth === 1) {
+                                $query->whereNotNull('parent_id')
+                                    ->whereDoesntHave('parent.parent');
+                            } elseif ($depth === 2) {
+                                $query->whereHas('parent', function ($q) {
+                                    $q->whereNotNull('parent_id')
+                                        ->whereDoesntHave('parent.parent');
+                                });
+                            } elseif ($depth === 3) {
+                                $query->whereHas('parent.parent', function ($q) {
+                                    $q->whereNotNull('parent_id')
+                                        ->whereDoesntHave('parent.parent');
+                                });
+                            }
+                        }
+                    }),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -171,6 +214,12 @@ class ResourceGroupResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\BulkAction::make('toggle_active')
+                        ->label('Toggle Active Status')
+                        ->icon('heroicon-o-check-circle')
+                        ->action(fn ($records) => $records->each->update([
+                            'is_active' => !$records->first()->is_active
+                        ])),
                 ]),
             ])
             ->defaultSort('sort_order')
