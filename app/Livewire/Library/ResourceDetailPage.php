@@ -4,12 +4,11 @@ namespace App\Livewire\Library;
 
 use Livewire\Component;
 use App\Models\Resource;
-use App\Models\Category;
 use App\Models\Order;
+use App\Models\MembershipPackage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ResourceDetailPage extends Component
 {
@@ -28,6 +27,12 @@ class ResourceDetailPage extends Component
     public $purchaseQuantity = 1;
     public $agreeTerms = false;
     
+    // Subscription upsell
+    public $showUpsellModal = false;
+    public $selectedPackage = null;
+    public $selectedBillingCycle = 'monthly';
+    public $membershipPackages = [];
+    
     // Reviews/Tabs
     public $activeTab = 'description';
     
@@ -37,6 +42,7 @@ class ResourceDetailPage extends Component
     {
         $this->slug = $slug;
         $this->loadResource();
+        $this->loadMembershipPackages();
     }
 
     public function loadResource()
@@ -50,6 +56,21 @@ class ResourceDetailPage extends Component
         // $this->resource->increment('views');
         
         $this->loadRelatedResources();
+    }
+
+    public function loadMembershipPackages()
+    {
+        $this->membershipPackages = MembershipPackage::where('is_active', true)
+            ->where(function($query) {
+                $query->where('price_monthly', '>', 0)
+                    ->orWhere('price_yearly', '>', 0)
+                    ->orWhere('price_quarterly', '>', 0)
+                    ->orWhere('price_lifetime', '>', 0);
+            })
+            ->orderBy('sort_order')
+            ->orderBy('price_monthly')
+            ->limit(3)
+            ->get();
     }
 
     public function loadRelatedResources()
@@ -100,6 +121,28 @@ class ResourceDetailPage extends Component
         $this->purchaseQuantity = 1;
         $this->agreeTerms = false;
         $this->showPurchaseModal = true;
+    }
+
+    public function showMembershipUpsell($packageId, $billingCycle = 'monthly')
+    {
+        $this->selectedPackage = MembershipPackage::find($packageId);
+        $this->selectedBillingCycle = $billingCycle;
+        $this->showUpsellModal = true;
+    }
+
+    public function proceedToMembershipCheckout()
+    {
+        if (!$this->selectedPackage) {
+            return;
+        }
+        
+        $this->showUpsellModal = false;
+        $this->showPurchaseModal = false;
+        
+        return redirect()->route('checkout.membership', [
+            'packageSlug' => $this->selectedPackage->slug,
+            'billingCycle' => $this->selectedBillingCycle
+        ]);
     }
 
     public function processPurchase()
@@ -211,7 +254,7 @@ class ResourceDetailPage extends Component
         };
     }
 
-    public function markDownloaded()
+    /*public function markDownloaded()
     {
         if (!Auth::check()) return;
 
@@ -241,15 +284,15 @@ class ResourceDetailPage extends Component
         }
 
         trackDownload($resource->id);
-    }
+    }*/
 
     public function markAndDownload()
     {
         // Mark as downloaded
-        $this->markDownloaded();
+        //$this->markDownloaded();
         
         // Trigger download via JavaScript
-        $this->dispatch('trigger-download', url: $this->getDownloadUrl());
+        $this->dispatch('trigger-download', url: route('library.resource.download', [$this->resource->slug]));
     }
 
     public function render()
@@ -262,6 +305,7 @@ class ResourceDetailPage extends Component
             'downloadUrl' => $this->getDownloadUrl(),
             'fileTypeIcon' => $this->getFileTypeIcon(),
             'fileTypeColor' => $this->getFileTypeColor(),
+            'membershipPackages' => $this->membershipPackages,
         ])->layout('frontend.layouts.library-app');
     }
 }

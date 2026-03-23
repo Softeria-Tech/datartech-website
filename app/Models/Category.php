@@ -57,6 +57,15 @@ class Category extends Model
         return $this->hasMany(Category::class, 'parent_id')->orderBy('sort_order');
     }
 
+     /**
+     * Get all grandchildren (third level categories)
+     */
+    public function grandchildren(): HasMany
+    {
+        return $this->hasMany(Category::class, 'parent_id')
+            ->whereHas('children');
+    }
+
     /**
      * Get all resources in this category.
      */
@@ -108,19 +117,35 @@ class Category extends Model
     }
 
     /**
-     * Get depth level (0 = root, 1 = child, 2 = grandchild, etc.).
-     */
-    public function getDepthAttribute(): int
-    {
-        return $this->ancestors()->count();
-    }
-
-    /**
      * Check if category has children.
      */
     public function hasChildren(): bool
     {
         return $this->children()->count() > 0;
+    }
+
+    /**
+     * Check if category has any grandchildren
+     */
+    public function hasGrandchildren(): bool
+    {
+        return $this->grandchildren()->count() > 0;
+    }
+
+    /**
+     * Get the depth level of the category (0 = main, 1 = sub, 2 = grand)
+     */
+    public function getDepthAttribute(): int
+    {
+        $depth = 0;
+        $current = $this;
+        
+        while ($current->parent) {
+            $depth++;
+            $current = $current->parent;
+        }
+        
+        return $depth;
     }
 
     /**
@@ -187,12 +212,55 @@ class Category extends Model
         });
     }
 
+     /**
+     * Get all descendant IDs (including children and grandchildren)
+     */
     public function getAllDescendantIds(): array
     {
         $ids = [$this->id];
+        
         foreach ($this->children as $child) {
             $ids = array_merge($ids, $child->getAllDescendantIds());
         }
+        
         return $ids;
+    }
+
+        /**
+     * Get full category path (Main > Sub > Grand)
+     */
+    public function getFullPathAttribute(): string
+    {
+        $path = [$this->name];
+        $parent = $this->parent;
+        
+        while ($parent) {
+            array_unshift($path, $parent->name);
+            $parent = $parent->parent;
+        }
+        
+        return implode(' > ', $path);
+    }
+
+    /**
+    * Check if this is a grandcategory
+    */
+    public function isGrandcategory(): bool
+    {
+        return !is_null($this->parent_id) && $this->parent?->parent !== null;
+    }
+
+    /**
+     * Get the root/main category
+     */
+    public function getRootCategory(): ?self
+    {
+        $current = $this;
+        
+        while ($current->parent) {
+            $current = $current->parent;
+        }
+        
+        return $current;
     }
 }

@@ -77,7 +77,7 @@ if(!function_exists('hasHitDownloadLimit')){
                 ->sum('downloads');
 
         if($package->download_limit_per_day && $todayTracker && $package->download_limit_per_day <= $todayTracker->downloads){
-            $msg = '24-hour Download Limit Exceeded';
+            $msg = '<a href="'.route('membership.plans').'">Daily Download Limit Exceeded<br>Upgrade to enjoy more downloads</a>';
             Log::info($msg,['daily limit'=>$package->download_limit_per_day,'today downloads'=>$todayTracker->downloads]);
             return $msg;
         }

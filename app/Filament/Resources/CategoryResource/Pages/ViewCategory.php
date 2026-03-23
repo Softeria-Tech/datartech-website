@@ -122,6 +122,51 @@ class ViewCategory extends ViewRecord
                                     ]),
                             ])
                             ->visible(fn ($record) => $record->thumbnail || $record->cover_image),
+                        Tabs\Tab::make('Grand Categories')
+                            ->visible(fn ($record) => $record->children()->whereHas('children')->count() > 0)
+                            ->schema([
+                                RepeatableEntry::make('children')
+                                    ->label('')
+                                    ->schema([
+                                        Grid::make(3)
+                                            ->schema([
+                                                TextEntry::make('name')
+                                                    ->label('Subcategory'),
+                                                TextEntry::make('children_count')
+                                                    ->label('Grand Categories')
+                                                    ->getStateUsing(fn ($record) => $record->children()->count())
+                                                    ->badge()
+                                                    ->color('warning'),
+                                                TextEntry::make('resources_count')
+                                                    ->label('Resources')
+                                                    ->getStateUsing(fn ($record) => $record->resources()->count())
+                                                    ->badge()
+                                                    ->color('success'),
+                                            ]),
+                                        RepeatableEntry::make('children')
+                                            ->label('Grand Categories List')
+                                            ->schema([
+                                                Grid::make(4)
+                                                    ->schema([
+                                                        TextEntry::make('name')
+                                                            ->label('Grand Category'),
+                                                        TextEntry::make('resources_count')
+                                                            ->label('Resources')
+                                                            ->numeric()
+                                                            ->badge()
+                                                            ->color('success'),
+                                                        IconEntry::make('is_visible')
+                                                            ->label('Visible')
+                                                            ->boolean(),
+                                                        TextEntry::make('sort_order')
+                                                            ->label('Order')
+                                                            ->numeric(),
+                                                    ]),
+                                            ])
+                                            ->grid(2),
+                                    ])
+                                    ->grid(1),
+                            ]),
                     ])
                     ->columnSpanFull(),
             ]);

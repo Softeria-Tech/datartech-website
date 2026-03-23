@@ -6,13 +6,13 @@ use App\Filament\Resources\ResourceGroupResource;
 use App\Models\Category;
 use App\Models\Resource;
 use App\Models\ResourceGroup;
-use App\Models\ServiceCategory;
 use Filament\Resources\Pages\Page;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
 use Filament\Forms\Components;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
@@ -35,6 +35,13 @@ class BulkUploadResources extends Page implements HasForms
     public $processedFiles = [];
     public $totalFiles = 0;
     public $isProcessing = false;
+    
+    // Category selections
+    public $selectedParentCategory = null;
+    public $selectedSubCategory = null;
+    public $selectedGrandCategory = null;
+    public $subCategories = [];
+    public $grandCategories = [];
 
     public function mount(): void
     {
@@ -43,7 +50,9 @@ class BulkUploadResources extends Page implements HasForms
             'create_subgroups' => true,
             'default_published' => false,
             'default_price' => 0,
-            'default_category_id' => null,
+            'parent_category_id' => null,
+            'sub_category_id' => null,
+            'grand_category_id' => null,
         ]);
     }
 
@@ -68,17 +77,69 @@ class BulkUploadResources extends Page implements HasForms
                                     ->required()
                                     ->default($this->record->id),
 
-                                Components\Select::make('default_category_id')
-                                    ->label('Default Category')
+                                // Parent Category (Required)
+                                Components\Select::make('parent_category_id')
+                                    ->label('Parent Category')
                                     ->options(function () {
-                                        return Category::orderBy('name')
+                                        return Category::whereNull('parent_id')
+                                            ->orderBy('name')
                                             ->get()
                                             ->mapWithKeys(fn ($cat) => [
                                                 $cat->id => $cat->name
                                             ]);
                                     })
                                     ->required()
-                                    ->helperText('Category to assign to all uploaded resources'),
+                                    ->reactive()
+                                    ->afterStateUpdated(function ($state) {
+                                        $this->selectedParentCategory = $state;
+                                        $this->selectedSubCategory = null;
+                                        $this->selectedGrandCategory = null;
+                                        $this->subCategories = [];
+                                        $this->grandCategories = [];
+                                        
+                                        if ($state) {
+                                            $this->subCategories = Category::where('parent_id', $state)
+                                                ->orderBy('name')
+                                                ->get()
+                                                ->pluck('name', 'id')
+                                                ->toArray();
+                                        }
+                                    })
+                                    ->helperText('Select the main category (required)'),
+                                    
+                                // Sub Category (Optional)
+                                Components\Select::make('sub_category_id')
+                                    ->label('Sub Category')
+                                    ->options(function () {
+                                        return $this->subCategories;
+                                    })
+                                    ->reactive()
+                                    ->afterStateUpdated(function ($state) {
+                                        $this->selectedSubCategory = $state;
+                                        $this->selectedGrandCategory = null;
+                                        $this->grandCategories = [];
+                                        
+                                        if ($state) {
+                                            $this->grandCategories = Category::where('parent_id', $state)
+                                                ->orderBy('name')
+                                                ->get()
+                                                ->pluck('name', 'id')
+                                                ->toArray();
+                                        }
+                                    })
+                                    ->helperText('Optional: Select a sub-category'),
+                                    
+                                // Grand Category (Optional)
+                                Components\Select::make('grand_category_id')
+                                    ->label('Grand Category')
+                                    ->options(function () {
+                                        return $this->grandCategories;
+                                    })
+                                    ->reactive()
+                                    ->afterStateUpdated(function ($state) {
+                                        $this->selectedGrandCategory = $state;
+                                    })
+                                    ->helperText('Optional: Select a grand category'),
                                     
                                 Components\TextInput::make('default_price')
                                     ->label('Default Price (Ksh)')
@@ -100,7 +161,6 @@ class BulkUploadResources extends Page implements HasForms
                                     ->label('Create Subgroups from Folders')
                                     ->default(true)
                                     ->helperText('Automatically create subgroups based on folder structure'),
-
                                     
                                 Components\Toggle::make('extract_zip')
                                     ->label('Extract ZIP Archives')
@@ -127,9 +187,42 @@ class BulkUploadResources extends Page implements HasForms
             ->statePath('data');
     }
 
+    /**
+     * Get the final category ID based on the hierarchy selection
+     * Returns the deepest selected category
+     */
+    protected function getFinalCategoryId(): ?int
+    {
+        if ($this->selectedGrandCategory) {
+            return $this->selectedGrandCategory;
+        }
+        
+        if ($this->selectedSubCategory) {
+            return $this->selectedSubCategory;
+        }
+        
+        if ($this->selectedParentCategory) {
+            return $this->selectedParentCategory;
+        }
+        
+        return null;
+    }
+
     public function processUpload()
     {
         $this->validate();
+        
+        // Get the final category ID (deepest selected)
+        $finalCategoryId = $this->getFinalCategoryId();
+        
+        if (!$finalCategoryId) {
+            Notification::make()
+                ->title('Category Required')
+                ->body('Please select at least a parent category.')
+                ->danger()
+                ->send();
+            return;
+        }
         
         $this->isProcessing = true;
         $this->uploadProgress = 0;
@@ -164,7 +257,7 @@ class BulkUploadResources extends Page implements HasForms
         }
         
         // Now create resources from all files
-        $createdCount = $this->createResourcesFromFiles($allResourceFiles, $data);
+        $createdCount = $this->createResourcesFromFiles($allResourceFiles, $data, $finalCategoryId);
         
         Notification::make()
             ->title('Bulk Upload Complete')
@@ -245,7 +338,7 @@ class BulkUploadResources extends Page implements HasForms
         return $currentParentId;
     }
 
-    protected function createResourcesFromFiles($files, $data)
+    protected function createResourcesFromFiles($files, $data, $categoryId)
     {
         $createdCount = 0;
         $totalFiles = count($files);
@@ -255,7 +348,10 @@ class BulkUploadResources extends Page implements HasForms
             $relativePath = $fileInfo['relative_path'];
             $groupId = $fileInfo['group_id'];
             
-            if (!file_exists($file)) continue;
+            if (!file_exists($file)) {
+                Log::info("File not found: {$file}");
+                continue;
+            }
             
             $fileName = pathinfo($relativePath, PATHINFO_BASENAME);
             $title = pathinfo($relativePath, PATHINFO_FILENAME);
@@ -264,22 +360,23 @@ class BulkUploadResources extends Page implements HasForms
             // Check if it's a valid resource file type
             $validExtensions = ['pdf', 'doc', 'docx', 'epub', 'zip', 'jpg', 'jpeg', 'png', 'gif'];
             if (!in_array(strtolower($extension), $validExtensions)) {
+                Log::info("Invalid file uploaded: {$file}");
                 continue; // Skip invalid file types
             }
             
             // Move file to permanent location
-            $newPath = 'resources/' . $groupId . '/' . uniqid() . '_' . Str::slug($title) . '.' . $extension;
+            $newPath = 'resources/' . $groupId . '/' .  Str::slug($title) .'_' .uniqid() . '.' . $extension;
             $moved = Storage::disk('public')->put($newPath, file_get_contents($file));
             
             if ($moved) {
-                // Create resource
+                // Create resource with the selected category (deepest level)
                 $resource = Resource::create([
                     'title' => $title,
                     'slug' => Str::slug($title) . '-' . uniqid(),
-                    'description' => "Resource from folder: {$relativePath}",
-                    'short_description' => "Uploaded from bulk import",
+                    'description' => $fileName,
+                    'short_description' => $fileName,
                     'group_id' => $groupId,
-                    'category_id' => $data['default_category_id'],
+                    'category_id' => $categoryId, // Use the deepest selected category
                     'price' => $data['default_price'] ?? 0,
                     'is_published' => $data['default_published'] ?? false,
                     'requires_subscription' => $data['requires_subscription'] ?? false,

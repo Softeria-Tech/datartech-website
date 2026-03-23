@@ -36,7 +36,7 @@ Route::middleware('web')->group(function(){
     Route::get('shop/product-details/{product_id}', [FrontendController::class, 'productDetails'])->name('product-details');
     Route::get('product-categories/{category_id}', [FrontendController::class, 'productCategories'])->name('product-categories');
 
-    Route::middleware(['auth', 'verify.phone'])->group(function(){
+    Route::middleware(['auth'])->group(function(){
 
         Route::get('logout', [DashboardController::class, 'logout'])->name('logout');    
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -52,6 +52,7 @@ Route::middleware('web')->group(function(){
         
         Route::get('/checkout/membership/{packageSlug}/{billingCycle}/{order?}', MembershipCheckout::class)->name('checkout.membership');   
         Route::get('/checkout/{order}', CheckoutPage::class) ->name('checkout');
+        Route::get('/download/resource/{resource}', [App\Http\Controllers\ResourceDownloadController::class, 'download'])->name('library.resource.download');
 
         Route::get('/checkout/success/{order}', function ($order) {
             return view('livewire.checkout.success', compact('order'));

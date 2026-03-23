@@ -74,6 +74,11 @@
 
         <div class="flex items-center justify-between">
             <div>
+            @if($this->userHasPurchased($resource->id))
+                <a href="{{ route('library.resource.detail', $resource->slug) }}" class="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition">
+                   download
+                </a>
+            @else
                 @if ($resource->price == 0)
                     <span class="text-2xl font-bold text-green-600 dark:text-green-400">
                         Free
@@ -90,6 +95,7 @@
                         Ksh{{ number_format($resource->price, 0) }}
                     </span>
                 @endif
+            @endif
             </div>
 
             <div class="flex gap-2">
@@ -115,10 +121,9 @@
                             </svg>
                         </a>
                     @else
-                        <button wire:click="initiatePurchase('{{ $resource->slug }}')"
-                            class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
+                        <a href="{{ route('library.resource.detail', $resource->slug) }}"class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition">
                             Buy
-                        </button>
+                        </a>
                     @endif
                 @else
                     <a href="{{ route('login', ['redirect' => route('library.resources')]) }}"

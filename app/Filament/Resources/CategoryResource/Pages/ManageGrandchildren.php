@@ -18,32 +18,32 @@ use Filament\Tables\Actions\ActionGroup;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
-class ManageSubcategories extends ManageRelatedRecords
+class ManageGrandchildren extends ManageRelatedRecords
 {
     protected static string $resource = CategoryResource::class;
 
     protected static string $relationship = 'children';
 
-    protected static ?string $navigationIcon = 'heroicon-o-folder';
+    protected static ?string $navigationIcon = 'heroicon-o-folder-open';
 
     public function getTitle(): string
     {
         $record = $this->getRecord();
-        return "Subcategories of: {$record->name}";
+        return "Grand Categories of: {$record->getFullPathAttribute()}";
     }
 
     public function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Subcategory Details')
+                Forms\Components\Section::make('Grand Category Details')
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->required()
                             ->maxLength(255)
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn ($state, callable $set) => 
-                                $set('slug', Str::slug($state))
+                                $set('slug', Str::slug($state).'-'.$this->getRecord()->parent->id)
                             ),
                         
                         Forms\Components\TextInput::make('slug')
@@ -69,7 +69,7 @@ class ManageSubcategories extends ManageRelatedRecords
                         
                         Forms\Components\FileUpload::make('thumbnail')
                             ->image()
-                            ->directory('categories/thumbnails/subcategories')
+                            ->directory('categories/thumbnails/grandcategories')
                             ->maxSize(2048),
                     ])->columns(2),
             ]);
@@ -87,7 +87,7 @@ class ManageSubcategories extends ManageRelatedRecords
                     ->size(25),
                 
                 TextColumn::make('name')
-                    ->label('Subcategory')
+                    ->label('Grand Category')
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
@@ -96,14 +96,6 @@ class ManageSubcategories extends ManageRelatedRecords
                     ->label('Description')
                     ->limit(50)
                     ->searchable(),
-                
-                TextColumn::make('children_count')
-                    ->label('Grand Categories')
-                    ->counts('children')
-                    ->badge()
-                    ->color('warning')
-                    ->alignCenter()
-                    ->formatStateUsing(fn ($state) => $state > 0 ? $state : 'None'),
                 
                 TextColumn::make('resources_count')
                     ->label('Resources')
@@ -136,19 +128,19 @@ class ManageSubcategories extends ManageRelatedRecords
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\Filter::make('has_children')
-                    ->label('Has Grand Categories')
-                    ->toggle()
-                    ->query(fn (Builder $query) => $query->has('children')),
-                
                 Tables\Filters\Filter::make('visible')
                     ->label('Visible Only')
                     ->toggle()
                     ->query(fn (Builder $query) => $query->where('is_visible', true)),
+                
+                Tables\Filters\Filter::make('featured')
+                    ->label('Featured Only')
+                    ->toggle()
+                    ->query(fn (Builder $query) => $query->where('is_featured', true)),
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                    ->label('New Subcategory')
+                    ->label('New Grand Category')
                     ->icon('heroicon-o-plus')
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['parent_id'] = $this->getRecord()->id;
@@ -162,32 +154,26 @@ class ManageSubcategories extends ManageRelatedRecords
                 ActionGroup::make([
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\EditAction::make(),
-                    Action::make('manage_grandchildren')
-                        ->label('Grand Categories')
-                        ->icon('heroicon-o-folder-open')
-                        ->color('warning')
-                        ->url(fn ($record) => CategoryResource::getUrl('subcategories', ['record' => $record]))
-                        ->visible(fn ($record) => true),
                     Tables\Actions\DeleteAction::make()
                         ->requiresConfirmation()
                         ->modalDescription(function ($record) {
-                            if ($record->children()->count() > 0) {
-                                return 'This subcategory has grand categories. Deleting it will also delete all grand categories and reassign their resources.';
+                            if ($record->resources()->count() > 0) {
+                                return 'This grand category has ' . $record->resources()->count() . ' resources. Deleting it will reassign these resources.';
                             }
-                            return 'Are you sure you want to delete this subcategory?';
+                            return 'Are you sure you want to delete this grand category?';
                         }),
                     Action::make('move_up')
                         ->label('Move Up')
                         ->icon('heroicon-o-arrow-up')
                         ->color('gray')
-                        ->action(fn ($record) => $this->moveSubcategoryOrder($record, 'up'))
+                        ->action(fn ($record) => $this->moveGrandcategoryOrder($record, 'up'))
                         ->visible(fn ($record) => $record->sort_order > 0),
                     
                     Action::make('move_down')
                         ->label('Move Down')
                         ->icon('heroicon-o-arrow-down')
                         ->color('gray')
-                        ->action(fn ($record) => $this->moveSubcategoryOrder($record, 'down'))
+                        ->action(fn ($record) => $this->moveGrandcategoryOrder($record, 'down'))
                 ])
                 ->icon('heroicon-o-ellipsis-vertical')
                 ->button(),
@@ -207,12 +193,11 @@ class ManageSubcategories extends ManageRelatedRecords
             ->reorderable('sort_order');
     }
 
-    protected function moveSubcategoryOrder($record, $direction)
+    protected function moveGrandcategoryOrder($record, $direction)
     {
         $currentOrder = $record->sort_order;
         $newOrder = $direction === 'up' ? $currentOrder - 1 : $currentOrder + 1;
         
-        // Find the subcategory to swap with (only within the same parent)
         $swapWith = Category::where('parent_id', $record->parent_id)
             ->where('sort_order', $newOrder)
             ->first();
@@ -227,13 +212,13 @@ class ManageSubcategories extends ManageRelatedRecords
     {
         return [
             Actions\Action::make('back')
-                ->label('Back to Main Categories')
+                ->label('Back to Subcategories')
                 ->icon('heroicon-o-arrow-left')
-                ->url(CategoryResource::getUrl('index'))
+                ->url(CategoryResource::getUrl('subcategories', ['record' => $this->getRecord()->parent]))
                 ->color('gray'),
             
             Actions\EditAction::make()
-                ->label('Edit Main Category')
+                ->label('Edit Subcategory')
                 ->record($this->getRecord()),
         ];
     }

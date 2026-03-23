@@ -296,15 +296,14 @@
                                 </span>
                             </div>
 
-                            <div class="flex justify-between text-sm">
+                            <div class="hide flex justify-between text-sm">
                                 <span class="text-gray-600 dark:text-gray-400">Quantity</span>
                                 <div class="flex items-center gap-2">
                                     <button wire:click="$set('purchaseQuantity', max(1, $purchaseQuantity - 1))"
                                         class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linecap="round" stroke-width="2"
-                                                d="M20 12H4" />
+                                            <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M20 12H4" />
                                         </svg>
                                     </button>
                                     <span class="w-8 text-center font-medium">{{ $purchaseQuantity }}</span>
@@ -335,9 +334,9 @@
                             <input type="checkbox" wire:model="agreeTerms"
                                 class="rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-500">
                             <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                                I agree to the <a href="/terms" class="text-primary-600 hover:text-primary-700">Terms
-                                    of Service</a> and <a href="/privacy"
-                                    class="text-primary-600 hover:text-primary-700">Privacy Policy</a>
+                                I agree to the 
+                                <a href="/terms" class="text-primary-600 hover:text-primary-700">Terms of Service</a> and 
+                                <a href="/privacy"lass="text-primary-600 hover:text-primary-700">Privacy Policy</a>
                             </span>
                         </label>
                         @error('agreeTerms')

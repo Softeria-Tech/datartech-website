@@ -9,6 +9,32 @@ use Illuminate\Support\Facades\Log;
 
 class MembershipPackage extends Model
 {
+    protected $fillable = [
+        'name',
+        'slug',
+        'description',
+        'features',
+        'price_monthly',
+        'price_yearly',
+        'price_quarterly',
+        'price_lifetime',
+        'discount_percentage',
+        'discount_price_monthly',
+        'discount_price_yearly',
+        'discount_ends_at',
+        'duration_days',
+        'trial_days',
+        'download_limit_per_month',
+        'download_limit_per_day',
+        'has_premium_only_access',
+        'allows_early_access',
+        'allowed_categories',
+        'is_popular',
+        'sort_order',
+        'is_active',
+    ];
+
+
     public function subscriptions()
     {
         return $this->hasMany(Subscription::class);

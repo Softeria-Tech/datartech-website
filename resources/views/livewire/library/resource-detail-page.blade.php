@@ -246,7 +246,7 @@
                                         Download Now
                                     </a>
                                 @else
-                                    <span class="block w-full px-4 py-3 bg-red-600 hover:bg-red-700  text-white text-center ">{!!$limitReached!!}</span>
+                                    <span class="block w-full px-4 py-3 text-center rounded-md" style="background: #ffb8b8;color: red;">{!!$limitReached!!}</span>
                                 @endif
                             </div>
                         @else
@@ -505,11 +505,11 @@
         <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="flex items-center justify-center min-h-screen p-4">
                 <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity"
-                     wire:click="$set('showPurchaseModal', false)"></div>
+                    wire:click="$set('showPurchaseModal', false)"></div>
 
-                <div class="relative bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+                <div class="relative bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full p-6 shadow-xl">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white">
                             Complete Your Purchase
                         </h3>
                         <button wire:click="$set('showPurchaseModal', false)"
@@ -520,84 +520,267 @@
                         </button>
                     </div>
 
-                    <div class="mb-6">
-                        <div class="flex gap-4 mb-4">
-                            @if($resource->thumbnail)
-                                <img src="{{ Storage::url($resource->thumbnail) }}" 
-                                     alt="{{ $resource->title }}"
-                                     class="w-20 h-20 object-cover rounded-lg">
-                            @endif
-                            <div>
-                                <h4 class="font-medium text-gray-900 dark:text-white">
-                                    {{ $resource->title }}
-                                </h4>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">
-                                    {{ $resource->author }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="space-y-3">
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">Price</span>
-                                <span class="font-medium text-gray-900 dark:text-white">
-                                    Ksh{{ number_format($resource->price, 0) }}
-                                </span>
-                            </div>
-
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">Quantity</span>
-                                <div class="flex items-center gap-2">
-                                    <button wire:click="$set('purchaseQuantity', max(1, $purchaseQuantity - 1))"
-                                            class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M20 12H4" />
-                                        </svg>
-                                    </button>
-                                    <span class="w-8 text-center font-medium">{{ $purchaseQuantity }}</span>
-                                    <button wire:click="$set('purchaseQuantity', $purchaseQuantity + 1)"
-                                            class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                        </svg>
-                                    </button>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {{-- Left Column - Current Purchase --}}
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                <div class="flex gap-4">
+                                    @if($resource->thumbnail)
+                                        <img src="{{ Storage::url($resource->thumbnail) }}" 
+                                            alt="{{ $resource->title }}"
+                                            class="w-20 h-20 object-cover rounded-lg">
+                                    @endif
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-900 dark:text-white">
+                                            {{ $resource->title }}
+                                        </h4>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                                            {{ $resource->author }}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="border-t border-gray-200 dark:border-gray-700 pt-3">
-                                <div class="flex justify-between font-medium">
-                                    <span>Total</span>
-                                    <span class="text-lg text-primary-600 dark:text-primary-400">
-                                        Ksh{{ number_format($resource->price * $purchaseQuantity, 0) }}
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600 dark:text-gray-400">Price</span>
+                                    <span class="font-medium text-gray-900 dark:text-white">
+                                        Ksh{{ number_format($resource->price, 0) }}
                                     </span>
                                 </div>
+
+                                <div class="hidden flex justify-between text-sm" style="display:none">
+                                    <span class="text-gray-600 dark:text-gray-400">Quantity</span>
+                                    <div class="flex items-center gap-2">
+                                        <button wire:click="$set('purchaseQuantity', max(1, $purchaseQuantity - 1))"
+                                                class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M20 12H4" />
+                                            </svg>
+                                        </button>
+                                        <span class="w-8 text-center font-medium">{{ $purchaseQuantity }}</span>
+                                        <button wire:click="$set('purchaseQuantity', $purchaseQuantity + 1)"
+                                                class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-gray-200 dark:border-gray-700 pt-3">
+                                    <div class="flex justify-between font-medium">
+                                        <span>Total</span>
+                                        <span class="text-lg text-primary-600 dark:text-primary-400">
+                                            Ksh{{ number_format($resource->price * $purchaseQuantity, 0) }}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
+
+                            <div class="mb-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" 
+                                        wire:model="agreeTerms"
+                                        class="rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-500">
+                                    <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                                        I agree to the <a href="/terms" class="text-primary-600 hover:text-primary-700">Terms of Service</a>
+                                    </span>
+                                </label>
+                                @error('agreeTerms') 
+                                    <span class="text-sm text-red-600">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <button wire:click="processPurchase"
+                                    wire:loading.attr="disabled"
+                                    class="w-full px-4 py-3 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 text-white font-medium rounded-lg transition">
+                                <span wire:loading.remove>Proceed to Checkout</span>
+                                <span wire:loading>Processing...</span>
+                            </button>
+
+                            <p class="text-xs text-center text-gray-500 dark:text-gray-400">
+                                Secure payment processed via M-Pesa
+                            </p>
+                        </div>
+
+                        {{-- Right Column - Subscription Upsell --}}
+                        @if($membershipPackages->isNotEmpty())
+                            <div class="border-l border-gray-200 dark:border-gray-700 pl-6">
+                                <div class="text-center mb-4">
+                                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-3">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-lg font-bold text-gray-900 dark:text-white">
+                                        🚀 Get More for Less!
+                                    </h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                        For just a little more, unlock unlimited access to our entire library!
+                                    </p>
+                                </div>
+
+                                <div class="space-y-3 mb-4">
+                                    <div class="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span>Access all {{ number_format(\App\Models\Resource::where('is_published', true)->count()) }}+ resources</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span>New resources added weekly</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span>Cancel anytime - no commitment</span>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    @foreach($membershipPackages as $package)
+                                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:border-primary-300 dark:hover:border-primary-700 transition cursor-pointer"
+                                            onclick="document.querySelector('[wire\\:click=\\\"showMembershipUpsell({{ $package->id }}, \'monthly\')\\\"]').click()">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex-1">
+                                                    <div class="flex items-center gap-2">
+                                                        <h5 class="font-semibold text-gray-900 dark:text-white">
+                                                            {{ $package->name }}
+                                                        </h5>
+                                                        @if($package->is_popular)
+                                                            <span class="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs font-medium rounded-full">
+                                                                Popular
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                    @if($package->description)
+                                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                            {{ Str::limit($package->description, 80) }}
+                                                        </p>
+                                                    @endif
+                                                    <div class="mt-2">
+                                                        @if($package->price_monthly > 0)
+                                                            <span class="text-xl font-bold text-primary-600 dark:text-primary-400">
+                                                                Ksh{{ number_format($package->price_monthly, 0) }}
+                                                            </span>
+                                                            <span class="text-xs text-gray-500 dark:text-gray-400">/month</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <button wire:click="showMembershipUpsell({{ $package->id }}, 'monthly')"
+                                                        class="px-3 py-2 bg-yellow-600 hover:bg-yellow-600 text-white text-xs font-medium rounded-lg transition whitespace-nowrap ml-3">
+                                                    Subscribe →
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <div class="mt-4 text-center">
+                                    <a href="{{ route('membership.plans') }}" 
+                                    class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium">
+                                        View all plans →
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Membership Upsell Modal --}}
+    @if($showUpsellModal && $selectedPackage)
+        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity"
+                    wire:click="$set('showUpsellModal', false)"></div>
+
+                <div class="relative bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                            Great Choice! 🎉
+                        </h3>
+                        <button wire:click="$set('showUpsellModal', false)"
+                                class="text-gray-400 hover:text-gray-500">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 mb-4">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M9 12l2 2 4-5m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                            You're about to unlock amazing value!
+                        </h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            With the <strong class="text-primary-600">{{ $selectedPackage->name }}</strong> plan, you'll get:
+                        </p>
+                    </div>
+
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center gap-3 text-sm">
+                            <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Access to all {{ number_format(\App\Models\Resource::where('is_published', true)->count()) }}+ resources</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm">
+                            <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>{{ $selectedPackage->download_limit_per_month ?: 'Unlimited' }} downloads per month</span>
+                        </div>
+                        @if($selectedPackage->has_premium_only_access)
+                            <div class="flex items-center gap-3 text-sm">
+                                <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Access to premium-only resources</span>
+                            </div>
+                        @endif
+                        <div class="flex items-center gap-3 text-sm">
+                            <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linecap="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>New content added weekly</span>
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="flex items-center">
-                            <input type="checkbox" 
-                                   wire:model="agreeTerms"
-                                   class="rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-500">
-                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                                I agree to the <a href="/terms" class="text-primary-600 hover:text-primary-700">Terms of Service</a>
-                            </span>
-                        </label>
-                        @error('agreeTerms') 
-                            <span class="text-sm text-red-600">{{ $message }}</span>
-                        @enderror
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
+                        <div class="text-center">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Your investment today</p>
+                            <p class="text-3xl font-bold text-primary-600 dark:text-primary-400">
+                                Ksh{{ number_format($selectedPackage->price_monthly, 0) }}
+                            </p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">per month • cancel anytime</p>
+                        </div>
                     </div>
 
-                    <button wire:click="processPurchase"
-                            wire:loading.attr="disabled"
-                            class="w-full px-4 py-3 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 text-white font-medium rounded-lg transition">
-                        <span wire:loading.remove>Proceed to Checkout</span>
-                        <span wire:loading>Processing...</span>
-                    </button>
+                    <div class="flex gap-3">
+                        <button wire:click="proceedToMembershipCheckout"
+                                class="flex-1 px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition">
+                            Subscribe Now
+                        </button>
+                        <button wire:click="$set('showUpsellModal', false)"
+                                class="px-4 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium rounded-lg transition">
+                            No, Thanks
+                        </button>
+                    </div>
 
-                    <p class="mt-3 text-xs text-center text-gray-500 dark:text-gray-400">
-                        Secure payment processed via M-Pesa
+                    <p class="mt-4 text-xs text-center text-gray-500 dark:text-gray-400">
+                        You can cancel your subscription anytime from your account settings.
                     </p>
                 </div>
             </div>

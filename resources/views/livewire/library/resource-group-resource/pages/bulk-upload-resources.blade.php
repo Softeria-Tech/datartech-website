@@ -4,7 +4,7 @@
         
         <div class="flex justify-end mt-6">
             <x-filament::button type="submit" color="success" icon="heroicon-o-cloud-arrow-up" :disabled="$isProcessing">
-                Start Upload
+                Save Uploads
             </x-filament::button>
         </div>
     </x-filament-panels::form>

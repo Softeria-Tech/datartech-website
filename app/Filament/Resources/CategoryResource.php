@@ -20,7 +20,6 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ActionGroup;
@@ -72,13 +71,32 @@ class CategoryResource extends Resource
                         Select::make('parent_id')
                             ->label('Parent Category')
                             ->placeholder('None (Main Category)')
-                            ->relationship('parent', 'name', fn (Builder $query) => 
-                                $query->whereNull('parent_id')->orderBy('name')
-                            )
+                            ->options(function () {
+                                $categories = Category::whereNull('parent_id')
+                                    ->orderBy('name')
+                                    ->get()
+                                    ->mapWithKeys(fn ($cat) => [
+                                        $cat->id => $cat->name
+                                    ])
+                                    ->toArray();
+                                
+                                // Add subcategories with indentation
+                                $subcategories = Category::whereNotNull('parent_id')
+                                    ->with('parent')
+                                    ->orderBy('parent_id')
+                                    ->orderBy('sort_order')
+                                    ->get()
+                                    ->mapWithKeys(fn ($cat) => [
+                                        $cat->id => '  → ' . $cat->parent->name . ' / ' . $cat->name
+                                    ])
+                                    ->toArray();
+                                
+                                return $categories + $subcategories;
+                            })
                             ->searchable()
                             ->preload()
                             ->columnSpan(1)
-                            ->helperText('Select a parent to create a subcategory, or leave empty for main category'),
+                            ->helperText('Select a parent to create a subcategory or grandcategory'),
                         
                         TextInput::make('sort_order')
                             ->label('Sort Order')
@@ -211,6 +229,19 @@ class CategoryResource extends Resource
                     ->alignCenter()
                     ->formatStateUsing(fn ($state) => $state > 0 ? $state : 'None'),
                 
+                TextColumn::make('grandchildren_count')
+                    ->label('Grand-categories')
+                    ->getStateUsing(function ($record) {
+                        $count = 0;
+                        foreach ($record->children as $child) {
+                            $count += $child->children()->count();
+                        }
+                        return $count;
+                    })
+                    ->badge()
+                    ->color('warning')
+                    ->alignCenter(),
+                
                 TextColumn::make('total_resources_count')
                     ->label('Total Resources')
                     ->getStateUsing(function ($record) {
@@ -283,7 +314,7 @@ class CategoryResource extends Resource
                         ->modalHeading('Delete Category')
                         ->modalDescription(fn ($record) => 
                             $record->hasChildren() 
-                                ? 'This category has sub-categories. Deleting it will also delete all sub-categories and reassign their resources.' 
+                                ? 'This category has sub-categories and grandchildren. Deleting it will also delete all subcategories and grandchildren, and reassign their resources.' 
                                 : 'Are you sure you want to delete this category?'
                         ),
                     Action::make('move_up')
@@ -335,6 +366,7 @@ class CategoryResource extends Resource
             'view' => Pages\ViewCategory::route('/{record}'),
             'edit' => Pages\EditCategory::route('/{record}/edit'),
             'subcategories' => Pages\ManageSubcategories::route('/{record}/subcategories'),
+            'grandchildren' => Pages\ManageGrandchildren::route('/{record}/grandchildren'),
         ];
     }
 
