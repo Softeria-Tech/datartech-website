@@ -31,7 +31,7 @@ Route::middleware('web')->group(function(){
 
     Route::middleware(['auth'])->group(function(){
 
-        Route::get('logout', [DashboardController::class, 'logout'])->name('logout');    
+        Route::any('logout', [DashboardController::class, 'logout'])->name('logout');    
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
