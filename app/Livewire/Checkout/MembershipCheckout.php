@@ -53,7 +53,7 @@ class MembershipCheckout extends MpesaApi
                 return;
             }            
         }
-        
+        $this->mpesaPhone = auth()->user()->phone;
         $this->calculatePrices();
         $this->createOrder();
         $this->initiateGateway();

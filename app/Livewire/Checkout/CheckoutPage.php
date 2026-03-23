@@ -33,6 +33,7 @@ class CheckoutPage extends MpesaApi
             $this->orderNumber = $order;
             $this->loadOrder();
         }
+        $this->mpesaPhone = auth()->user()->phone;
         $this->initiateGateway();
     }
 

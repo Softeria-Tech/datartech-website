@@ -48,6 +48,10 @@ abstract class MpesaApi extends Component
         $this->paymentStep = 'processing';
         $this->errorMessage = '';
 
+        $user = auth()->user();
+        $user->phone = $this->mpesaPhone;
+        $user->save();
+
         $phone = $this->formatMpesaPhone($this->mpesaPhone);
         
         try {
