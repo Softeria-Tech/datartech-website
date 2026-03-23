@@ -17,11 +17,16 @@ class ResourcesPage extends Component
 
     // Filters
     public $search = '';
-    public $selectedCategory = null;
-    public $selectedType = '';
-    public $selectedPrice = '';
+    public $selectedParentCategory = null;
+    public $selectedSubCategory = null;
+    public $selectedGrandCategory = null;
     public $sortBy = 'latest';
     public $showSubscriptionOnly = false;
+    
+    // Category hierarchy data
+    public $parentCategories = [];
+    public $subCategories = [];
+    public $grandCategories = [];
     
     // Preview modal
     public $showPreviewModal = false;
@@ -38,28 +43,73 @@ class ResourcesPage extends Component
     public $purchaseQuantity = 1;
     public $agreeTerms = false;
     
-    // Categories with counts
-    public $categories;
+    // Mobile filter state
+    public $showMobileFilters = false;
     
     protected $queryString = [
         'search' => ['except' => ''],
-        'selectedCategory' => ['except' => ''],
-        'selectedType' => ['except' => ''],
+        'selectedParentCategory' => ['except' => ''],
+        'selectedSubCategory' => ['except' => ''],
+        'selectedGrandCategory' => ['except' => ''],
         'sortBy' => ['except' => 'latest'],
     ];
 
     public function mount($slug = '')
     {
-        // Load categories with resource counts
-        $this->loadCategories();
+        // Load parent categories
+        $this->loadParentCategories();
     }
 
-    public function loadCategories()
+    public function loadParentCategories()
     {
-        $this->categories = Category::withCount('resources')
+        $this->parentCategories = Category::whereNull('parent_id')
             ->whereHas('resources', fn($q) => $q->where('is_published', true))
+            ->withCount(['resources' => fn($q) => $q->where('is_published', true)])
             ->orderBy('sort_order')
             ->get();
+    }
+
+    public function updatedSelectedParentCategory()
+    {
+        // Reset sub and grand categories when parent changes
+        $this->selectedSubCategory = null;
+        $this->selectedGrandCategory = null;
+        $this->subCategories = [];
+        $this->grandCategories = [];
+        
+        if ($this->selectedParentCategory) {
+            // Load subcategories
+            $this->subCategories = Category::where('parent_id', $this->selectedParentCategory)
+                ->whereHas('resources', fn($q) => $q->where('is_published', true))
+                ->withCount(['resources' => fn($q) => $q->where('is_published', true)])
+                ->orderBy('sort_order')
+                ->get();
+        }
+        
+        $this->resetPage();
+    }
+
+    public function updatedSelectedSubCategory()
+    {
+        // Reset grand category when sub changes
+        $this->selectedGrandCategory = null;
+        $this->grandCategories = [];
+        
+        if ($this->selectedSubCategory) {
+            // Load grand categories
+            $this->grandCategories = Category::where('parent_id', $this->selectedSubCategory)
+                ->whereHas('resources', fn($q) => $q->where('is_published', true))
+                ->withCount(['resources' => fn($q) => $q->where('is_published', true)])
+                ->orderBy('sort_order')
+                ->get();
+        }
+        
+        $this->resetPage();
+    }
+
+    public function updatedSelectedGrandCategory()
+    {
+        $this->resetPage();
     }
 
     public function updatedSearch()
@@ -67,18 +117,26 @@ class ResourcesPage extends Component
         $this->resetPage();
     }
 
-    public function updatedSelectedCategory()
-    {
-        $this->resetPage();
-    }
-
-    public function updatedSelectedType()
-    {
-        $this->resetPage();
-    }
-
     public function updatedSortBy()
     {
+        $this->resetPage();
+    }
+
+    public function updatedShowSubscriptionOnly()
+    {
+        $this->resetPage();
+    }
+
+    public function clearFilters()
+    {
+        $this->selectedParentCategory = null;
+        $this->selectedSubCategory = null;
+        $this->selectedGrandCategory = null;
+        $this->search = '';
+        $this->sortBy = 'latest';
+        $this->showSubscriptionOnly = false;
+        $this->subCategories = [];
+        $this->grandCategories = [];
         $this->resetPage();
     }
 
@@ -92,10 +150,7 @@ class ResourcesPage extends Component
         // Get preview file URL
         if ($this->previewResource->preview_file_path) {
             $this->previewFileUrl = Storage::url($this->previewResource->preview_file_path);
-        }/* elseif ($this->previewResource->file_path && $this->previewResource->delivery_type === 'upload') {
-            // If no preview file, use the main file but we'll show limited preview
-            $this->previewFileUrl = Storage::url($this->previewResource->file_path);
-        }*/
+        }
         
         $this->showPreviewModal = true;
     }
@@ -144,7 +199,7 @@ class ResourcesPage extends Component
         
         // Calculate totals
         $subtotal = $resource->price * $this->purchaseQuantity;
-        $tax = $subtotal * 0.0; // Configure tax as needed
+        $tax = $subtotal * 0.0;
         $total = $subtotal + $tax;
 
         // Create order
@@ -159,7 +214,7 @@ class ResourcesPage extends Component
             'subtotal' => $subtotal,
             'tax' => $tax,
             'total' => $total,
-            'payment_method' => 'mpesa', // Default, can be changed
+            'payment_method' => 'mpesa',
             'payment_status' => 'pending',
             'order_status' => 'processing',
             'total_items' => $this->purchaseQuantity,
@@ -187,11 +242,11 @@ class ResourcesPage extends Component
         }
 
         $resource = Resource::find($resourceId);
-        if($resource->price==0){//free resource, allow download without purchase
+        if($resource->price==0){
             return true;
         }
         
-        return Auth::user()->orders() ->where('resource_id', $resourceId) ->where('payment_status', 'paid') ->exists();
+        return Auth::user()->orders()->where('resource_id', $resourceId)->where('payment_status', 'paid')->exists();
     }
 
     // Check if user has active subscription
@@ -199,27 +254,7 @@ class ResourcesPage extends Component
     {
         if (!Auth::check()) return false;
         
-        return Auth::user()->subscriptions()
-            ->active()
-            ->exists();
-    }
-
-    // Get download URL for purchased resources
-    public function getDownloadUrl($resourceId)
-    {
-        if (!Auth::check()) return '#';
-        
-        $canDownload = Auth::user()->orders()
-            ->where('resource_id', $resourceId)
-            ->where('payment_status', 'paid')
-            ->exists();
-            
-        if ($canDownload) {
-            $resource = Resource::find($resourceId);
-            return $resource->file_path ? Storage::url($resource->file_path) : '#';
-        }
-        
-        return '#';
+        return Auth::user()->subscriptions()->active()->exists();
     }
 
     public function render()
@@ -238,57 +273,15 @@ class ResourcesPage extends Component
             });
         }
 
-        // Category filter
-        if (!empty($this->selectedCategory)) {
-            $query->where('category_id', $this->selectedCategory);
-        }
-
-        // Resource type filter (based on file type)
-        if (!empty($this->selectedType)) {
-            switch ($this->selectedType) {
-                case 'pdf':
-                    $query->where('file_path', 'like', '%.pdf');
-                    break;
-                case 'word':
-                    $query->where(function($q) {
-                        $q->where('file_path', 'like', '%.doc')
-                          ->orWhere('file_path', 'like', '%.docx');
-                    });
-                    break;
-                case 'excel':
-                    $query->where(function($q) {
-                        $q->where('file_path', 'like', '%.xls')
-                          ->orWhere('file_path', 'like', '%.xlsx');
-                    });
-                    break;
-                case 'ebook':
-                    $query->where(function($q) {
-                        $q->where('file_path', 'like', '%.epub')
-                          ->orWhere('file_path', 'like', '%.mobi')
-                          ->orWhere('isbn', '!=', '');
-                    });
-                    break;
-            }
-        }
-
-        // Price filter
-        if (!empty($this->selectedPrice)) {
-            switch ($this->selectedPrice) {
-                case 'free':
-                    $query->where('price', 0);
-                    break;
-                case 'under50':
-                    $query->whereBetween('price', [0, 49.99]);
-                    break;
-                case '50to100':
-                    $query->whereBetween('price', [50, 99.99]);
-                    break;
-                case '100to250':
-                    $query->whereBetween('price', [100, 250]);
-                    break;
-                case 'over250':
-                    $query->where('price', '>', 250);
-                    break;
+        // Category filtering - use the deepest selected category
+        $selectedCategoryId = $this->selectedGrandCategory ?? $this->selectedSubCategory ?? $this->selectedParentCategory;
+        
+        if ($selectedCategoryId) {
+            // Get all descendant category IDs for comprehensive filtering
+            $category = Category::find($selectedCategoryId);
+            if ($category) {
+                $categoryIds = $category->getAllDescendantIds();
+                $query->whereIn('category_id', $categoryIds);
             }
         }
 
@@ -326,7 +319,6 @@ class ResourcesPage extends Component
 
         return view('livewire.library.resources-page', [
             'resources' => $resources,
-            'categories' => $this->categories,
             'isAuthenticated' => Auth::check(),
             'user' => Auth::user(),
         ])->layout('frontend.layouts.library-app');

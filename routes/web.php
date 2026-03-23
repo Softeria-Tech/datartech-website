@@ -29,13 +29,6 @@ Route::middleware('web')->group(function(){
     Route::get('/library/resource/{slug}', ResourceDetailPage::class)->name('library.resource.detail');
     Route::get('/membership/plans', MembershipPlans::class)->name('membership.plans');
 
-    Route::get('service-details/{service_id}', [FrontendController::class, 'serviceDetails'])->name('service-details');
-    Route::get('about-us', [FrontendController::class, 'aboutUs'])->name('about-us');
-    Route::get('contact-us', [FrontendController::class, 'contactUs'])->name('contact-us');
-    Route::get('shop', [FrontendController::class, 'shop'])->name('shop');
-    Route::get('shop/product-details/{product_id}', [FrontendController::class, 'productDetails'])->name('product-details');
-    Route::get('product-categories/{category_id}', [FrontendController::class, 'productCategories'])->name('product-categories');
-
     Route::middleware(['auth'])->group(function(){
 
         Route::get('logout', [DashboardController::class, 'logout'])->name('logout');    
