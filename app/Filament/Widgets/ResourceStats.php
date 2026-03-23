@@ -40,10 +40,10 @@ class ResourceStats extends BaseWidget
                 ->color('warning'),
                 
             Stat::make('Orders', 'Ksh ' . number_format(
-                $this->getFilteredSum(Order::where('payment_status', 'paid'), 'total', $dateFilter, $startDate, $endDate), 
+                $this->getFilteredSum(Order::where('payment_status', 'paid'), 'total', $dateFilter, $startDate, $endDate,'updated_at'), 
                 2
             ))
-                ->description('From ' . $this->getFilteredCount(Order::where('payment_status', 'paid'), $dateFilter, $startDate, $endDate) . ' sales')
+                ->description('From ' . $this->getFilteredCount(Order::where('payment_status', 'paid'), $dateFilter, $startDate, $endDate,'updated_at') . ' sales')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success'),
 
@@ -98,11 +98,11 @@ class ResourceStats extends BaseWidget
     /**
      * Apply date filter to a query builder or model
      */
-    protected function applyDateFilter($query, ?array $dateFilter, $startDate = null, $endDate = null)
+    protected function applyDateFilter($query, ?array $dateFilter, $startDate = null, $endDate = null,$dateCol='created_at')
     {
         // Handle custom date range
         if ($startDate && $endDate) {
-            return $query->whereBetween('created_at', [
+            return $query->whereBetween($dateCol, [
                 Carbon::parse($startDate)->startOfDay(),
                 Carbon::parse($endDate)->endOfDay(),
             ]);
@@ -110,7 +110,7 @@ class ResourceStats extends BaseWidget
         
         // Handle predefined periods
         if ($dateFilter) {
-            return $query->whereBetween('created_at', [$dateFilter['start'], $dateFilter['end']]);
+            return $query->whereBetween($dateCol, [$dateFilter['start'], $dateFilter['end']]);
         }
         
         return $query;
@@ -119,7 +119,7 @@ class ResourceStats extends BaseWidget
     /**
      * Get filtered count
      */
-    protected function getFilteredCount($model, ?array $dateFilter, $startDate = null, $endDate = null): int
+    protected function getFilteredCount($model, ?array $dateFilter, $startDate = null, $endDate = null,$dateCol='created_at'): int
     {
         if (is_string($model)) {
             $query = $model::query();
@@ -127,13 +127,13 @@ class ResourceStats extends BaseWidget
             $query = $model;
         }
         
-        return $this->applyDateFilter($query, $dateFilter, $startDate, $endDate)->count();
+        return $this->applyDateFilter($query, $dateFilter, $startDate, $endDate,$dateCol)->count();
     }
     
     /**
      * Get filtered sum
      */
-    protected function getFilteredSum($model, string $column, ?array $dateFilter, $startDate = null, $endDate = null): float
+    protected function getFilteredSum($model, string $column, ?array $dateFilter, $startDate = null, $endDate = null, $dateCol='created_at'): float
     {
         if (is_string($model)) {
             $query = $model::query();
@@ -141,7 +141,7 @@ class ResourceStats extends BaseWidget
             $query = $model;
         }
         
-        return $this->applyDateFilter($query, $dateFilter, $startDate, $endDate)->sum($column) ?? 0;
+        return $this->applyDateFilter($query, $dateFilter, $startDate, $endDate,$dateCol)->sum($column) ?? 0;
     }
     
     /**
