@@ -391,7 +391,8 @@ class ResourceResource extends FilamentResource
                     ->url(fn ($record) => $record->category 
                         ? route('filament.admin.resources.categories.view', $record->category) 
                         : null
-                    ) ->toggleable(),
+                    )->toggleable(),
+                    
                 Tables\Columns\TextColumn::make('group.full_path')
                     ->label('Group')
                     ->searchable()
@@ -442,22 +443,24 @@ class ResourceResource extends FilamentResource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                // Category Filter
                 SelectFilter::make('category_id')
-                ->label('Category')
-                ->relationship('category', 'name')
-                ->searchable()
-                ->preload()
-                ->options(fn (): array => 
-                    \App\Models\Category::orderBy('name')
-                        ->get()
-                        ->mapWithKeys(fn ($category) => [
-                            $category->id => $category->depth > 0 
-                                ? str_repeat('— ', $category->depth) . ' ' . $category->name 
-                                : $category->name
-                        ])
-                        ->toArray()
-                ),
-            
+                    ->label('Category')
+                    ->relationship('category', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->options(fn (): array => 
+                        \App\Models\Category::orderBy('name')
+                            ->get()
+                            ->mapWithKeys(fn ($category) => [
+                                $category->id => $category->depth > 0 
+                                    ? str_repeat('— ', $category->depth) . ' ' . $category->name 
+                                    : $category->name
+                            ])
+                            ->toArray()
+                    ),
+                
+                // Parent Category Filter
                 SelectFilter::make('parent_category')
                     ->label('Main Category')
                     ->relationship('category.parent', 'name')
@@ -477,24 +480,135 @@ class ResourceResource extends FilamentResource
                             $q->where('parent_id', $value);
                         });
                     }),
+                
+                // Group Filter - NEW
+                SelectFilter::make('group_id')
+                    ->label('Resource Group')
+                    ->relationship('group', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->options(fn (): array => 
+                        \App\Models\ResourceGroup::orderBy('name')
+                            ->get()
+                            ->mapWithKeys(fn ($group) => [
+                                $group->id => $group->full_path
+                            ])
+                            ->toArray()
+                    ),
+                
+                // Group Level Filter - Filter by depth level
+                SelectFilter::make('group_depth')
+                    ->label('Group Level')
+                    ->options([
+                        '0' => 'Parent Groups',
+                        '1' => 'Sub Groups',
+                        '2' => 'Grand Groups',
+                        '3' => '4th Degree Groups',
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        $value = $data['value'] ?? null;
+                        if ($value === null) return $query;
                         
+                        return $query->whereHas('group', function ($q) use ($value) {
+                            if ($value == 0) {
+                                $q->whereNull('parent_id');
+                            } elseif ($value == 1) {
+                                $q->whereNotNull('parent_id')
+                                    ->whereDoesntHave('parent.parent');
+                            } elseif ($value == 2) {
+                                $q->whereHas('parent', function ($inner) {
+                                    $inner->whereNotNull('parent_id')
+                                        ->whereDoesntHave('parent.parent');
+                                });
+                            } elseif ($value == 3) {
+                                $q->whereHas('parent.parent', function ($inner) {
+                                    $inner->whereNotNull('parent_id')
+                                        ->whereDoesntHave('parent.parent');
+                                });
+                            }
+                        });
+                    }),
+                
+                // Published Filter
                 TernaryFilter::make('is_published')
                     ->label('Published')
                     ->placeholder('All')
                     ->trueLabel('Published')
                     ->falseLabel('Draft'),
-                    
+                
+                // Subscription Filter
                 TernaryFilter::make('requires_subscription')
                     ->label('Access Type')
                     ->placeholder('All')
                     ->trueLabel('Subscription Only')
                     ->falseLabel('One-time Purchase'),
-                    
+                
+                // Language Filter
                 SelectFilter::make('language')
                     ->options([
                         'en' => 'English',
                         'sw' => 'Swahili',
                     ]),
+                    
+                // Price Range Filter
+                \Filament\Tables\Filters\Filter::make('price_range')
+                    ->form([
+                        Forms\Components\TextInput::make('min_price')
+                            ->label('Min Price')
+                            ->numeric()
+                            ->prefix('Ksh'),
+                        Forms\Components\TextInput::make('max_price')
+                            ->label('Max Price')
+                            ->numeric()
+                            ->prefix('Ksh'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['min_price'],
+                                fn (Builder $query, $min): Builder => $query->where('price', '>=', $min),
+                            )
+                            ->when(
+                                $data['max_price'],
+                                fn (Builder $query, $max): Builder => $query->where('price', '<=', $max),
+                            );
+                    }),
+                    
+                // Bulk Upload Filter - NEW (if you have bulk_upload_id)
+                SelectFilter::make('bulk_upload_id')
+                    ->label('Bulk Upload')
+                    ->relationship('bulkUpload', 'id')
+                    ->searchable()
+                    ->preload()
+                    ->options(fn (): array => 
+                        \App\Models\BulkUpload::orderBy('created_at', 'desc')
+                            ->limit(50)
+                            ->get()
+                            ->mapWithKeys(fn ($bulk) => [
+                                $bulk->id => "Bulk Upload #{$bulk->id} - {$bulk->created_at->format('Y-m-d')}"
+                            ])
+                            ->toArray()
+                    ),
+                    
+                // Date Range Filter
+                \Filament\Tables\Filters\Filter::make('created_at_range')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')
+                            ->label('Created From'),
+                        Forms\Components\DatePicker::make('created_until')
+                            ->label('Created Until'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    }),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -525,6 +639,54 @@ class ResourceResource extends FilamentResource
                                     'is_published' => !$record->is_published
                                 ]);
                             }
+                        }),
+                    Tables\Actions\BulkAction::make('update_group')
+                        ->label('Change Group')
+                        ->icon('heroicon-o-folder')
+                        ->form([
+                            Forms\Components\Select::make('group_id')
+                                ->label('New Group')
+                                ->options(function () {
+                                    return \App\Models\ResourceGroup::orderBy('name')
+                                        ->get()
+                                        ->mapWithKeys(fn ($group) => [
+                                            $group->id => $group->full_path
+                                        ]);
+                                })
+                                ->required()
+                                ->searchable(),
+                        ])
+                        ->action(function (array $data, $records) {
+                            foreach ($records as $record) {
+                                $record->update(['group_id' => $data['group_id']]);
+                            }
+                            
+                            \Filament\Notifications\Notification::make()
+                                ->title('Group Updated')
+                                ->body("Updated group for {$records->count()} resources")
+                                ->success()
+                                ->send();
+                        }),
+                    Tables\Actions\BulkAction::make('update_price')
+                        ->label('Update Price')
+                        ->icon('heroicon-o-currency-dollar')
+                        ->form([
+                            Forms\Components\TextInput::make('price')
+                                ->label('New Price')
+                                ->numeric()
+                                ->prefix('Ksh')
+                                ->required(),
+                        ])
+                        ->action(function (array $data, $records) {
+                            foreach ($records as $record) {
+                                $record->update(['price' => $data['price']]);
+                            }
+                            
+                            \Filament\Notifications\Notification::make()
+                                ->title('Price Updated')
+                                ->body("Updated price for {$records->count()} resources")
+                                ->success()
+                                ->send();
                         }),
                 ]),
             ])
