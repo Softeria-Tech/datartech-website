@@ -28,7 +28,7 @@
         @elseif($balance !== null)
             <div class="text-center py-4">
                 <div class="text-3xl font-bold mb-2">
-                    <span class="text-{{ $balanceColor }}-600 dark:text-{{ $balanceColor }}-400">
+                    <span class="text-{{ $balanceColor }}-600 dark:text-white">
                         {{ number_format($balance, 2) }}
                     </span>
                     <span class="text-sm text-gray-500">Ksh</span>
@@ -42,7 +42,7 @@
             </div>
             
             @if($rate !== null)
-                <div class="text-center text-sm text-gray-600 dark:text-gray-400">
+                <div class="text-center text-sm text-gray-600 dark:white">
                     Rate: <span class="font-semibold">{{ number_format($rate, 1) }}</span> units per SMS
                 </div>
             @endif
@@ -64,7 +64,7 @@
         <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <a 
                 href="https://sms.softeriatech.com/partner/auth/{{ config('services.sms_pro.api_key') }}" target="_blank"
-                class="block w-full text-center px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition"
+                class="block w-full text-center px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-lg transition"
             >
                 <svg class="inline-block w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>

@@ -391,7 +391,7 @@ class ResourceResource extends FilamentResource
                     ->url(fn ($record) => $record->category 
                         ? route('filament.admin.resources.categories.view', $record->category) 
                         : null
-                    ),
+                    ) ->toggleable(),
                 Tables\Columns\TextColumn::make('group.full_path')
                     ->label('Group')
                     ->searchable()
@@ -415,7 +415,8 @@ class ResourceResource extends FilamentResource
                     ->label('Sub Only')
                     ->boolean()
                     ->trueIcon('heroicon-o-lock-closed')
-                    ->falseIcon('heroicon-o-lock-open'),
+                    ->falseIcon('heroicon-o-lock-open')
+                    ->toggleable(),
                     
                 Tables\Columns\TextColumn::make('download_count')
                     ->label('DLs')
@@ -457,26 +458,26 @@ class ResourceResource extends FilamentResource
                         ->toArray()
                 ),
             
-            SelectFilter::make('parent_category')
-                ->label('Main Category')
-                ->relationship('category.parent', 'name')
-                ->searchable()
-                ->preload()
-                ->options(fn (): array => 
-                    \App\Models\Category::whereNull('parent_id')
-                        ->orderBy('name')
-                        ->pluck('name', 'id')
-                        ->toArray()
-                )
-                ->query(function (Builder $query, array $data) {
-                    $value = $data['value'] ?? null;
-                    if (!$value) return $query;
-                    
-                    return $query->whereHas('category', function ($q) use ($value) {
-                        $q->where('parent_id', $value);
-                    });
-                }),
-                    
+                SelectFilter::make('parent_category')
+                    ->label('Main Category')
+                    ->relationship('category.parent', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->options(fn (): array => 
+                        \App\Models\Category::whereNull('parent_id')
+                            ->orderBy('name')
+                            ->pluck('name', 'id')
+                            ->toArray()
+                    )
+                    ->query(function (Builder $query, array $data) {
+                        $value = $data['value'] ?? null;
+                        if (!$value) return $query;
+                        
+                        return $query->whereHas('category', function ($q) use ($value) {
+                            $q->where('parent_id', $value);
+                        });
+                    }),
+                        
                 TernaryFilter::make('is_published')
                     ->label('Published')
                     ->placeholder('All')

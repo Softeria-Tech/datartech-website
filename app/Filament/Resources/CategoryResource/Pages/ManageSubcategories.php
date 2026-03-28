@@ -54,6 +54,26 @@ class ManageSubcategories extends ManageRelatedRecords
                         Forms\Components\Textarea::make('short_description')
                             ->maxLength(500)
                             ->rows(2),
+                        Forms\Components\Select::make('parent_id')
+                            ->label('Parent Category')
+                            ->placeholder('None')
+                            ->options(function () {
+                                $categories = Category::whereNotNull('parent_id')
+                                    ->with('parent')
+                                    ->orderBy('parent_id')
+                                    ->orderBy('sort_order')
+                                    ->get()
+                                    ->mapWithKeys(fn ($cat) => [
+                                        $cat->id =>$cat->path                                        
+                                    ])
+                                    ->toArray();
+                                
+                                return $categories;
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->columnSpan(1)
+                            ->helperText('Select a parent to create a subcategory or grandcategory'),
                         
                         Forms\Components\TextInput::make('sort_order')
                             ->numeric()

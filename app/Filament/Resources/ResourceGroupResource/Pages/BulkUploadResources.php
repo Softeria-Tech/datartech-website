@@ -6,6 +6,7 @@ use App\Filament\Resources\ResourceGroupResource;
 use App\Models\Category;
 use App\Models\Resource;
 use App\Models\ResourceGroup;
+use App\Models\BulkUpload;
 use Filament\Resources\Pages\Page;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -24,7 +25,6 @@ class BulkUploadResources extends Page implements HasForms
     use InteractsWithForms;
 
     protected static string $resource = ResourceGroupResource::class;
-
     protected static string $view = 'livewire.library.resource-group-resource.pages.bulk-upload-resources';
 
     public ResourceGroup $record;
@@ -35,6 +35,7 @@ class BulkUploadResources extends Page implements HasForms
     public $processedFiles = [];
     public $totalFiles = 0;
     public $isProcessing = false;
+    public $bulkUpload = null;
     
     // Category selections
     public $selectedParentCategory = null;
@@ -187,10 +188,6 @@ class BulkUploadResources extends Page implements HasForms
             ->statePath('data');
     }
 
-    /**
-     * Get the final category ID based on the hierarchy selection
-     * Returns the deepest selected category
-     */
     protected function getFinalCategoryId(): ?int
     {
         if ($this->selectedGrandCategory) {
@@ -212,7 +209,6 @@ class BulkUploadResources extends Page implements HasForms
     {
         $this->validate();
         
-        // Get the final category ID (deepest selected)
         $finalCategoryId = $this->getFinalCategoryId();
         
         if (!$finalCategoryId) {
@@ -232,36 +228,71 @@ class BulkUploadResources extends Page implements HasForms
         $files = $data['files'] ?? [];
         $this->totalFiles = count($files);
         
+        // Create bulk upload record
+        $this->bulkUpload = BulkUpload::create([
+            'category_id' => $finalCategoryId,
+            'group_id' => $data['group_id'],
+            'uploaded_by' => auth()->id(),
+            'total_files' => $this->totalFiles,
+            'price'=>$data['price'],
+            'status' => 'processing',
+            'metadata' => [
+                'upload_type' => 'bulk',
+                'extract_zip' => $data['extract_zip'],
+                'create_subgroups' => $data['create_subgroups'],
+                'default_price' => $data['default_price'],
+                'default_published' => $data['default_published'],
+                'requires_subscription' => $data['requires_subscription'],
+            ]
+        ]);
+        
         $allResourceFiles = [];
+        $successfulCount = 0;
+        $failedCount = 0;
         
         // Process each uploaded file
         foreach ($files as $index => $filePath) {
-            $fullPath = Storage::disk('public')->path($filePath);
-            
-            // Check if it's a ZIP file
-            if ($data['extract_zip'] && pathinfo($fullPath, PATHINFO_EXTENSION) === 'zip') {
-                $extractedFiles = $this->extractZip($fullPath, $data);
-                $allResourceFiles = array_merge($allResourceFiles, $extractedFiles);
-            } else {
-                // Single file
-                $allResourceFiles[] = [
-                    'path' => $fullPath,
-                    'relative_path' => basename($fullPath),
-                    'group_id' => $data['group_id']
-                ];
+            try {
+                $fullPath = Storage::disk('public')->path($filePath);
+                
+                // Check if it's a ZIP file
+                if ($data['extract_zip'] && pathinfo($fullPath, PATHINFO_EXTENSION) === 'zip') {
+                    $extractedFiles = $this->extractZip($fullPath, $data);
+                    $allResourceFiles = array_merge($allResourceFiles, $extractedFiles);
+                } else {
+                    // Single file
+                    $allResourceFiles[] = [
+                        'path' => $fullPath,
+                        'relative_path' => basename($fullPath),
+                        'group_id' => $data['group_id']
+                    ];
+                }
+                
+                $successfulCount++;
+            } catch (\Exception $e) {
+                $failedCount++;
+                Log::error("Failed to process file {$filePath}: " . $e->getMessage());
             }
             
             // Update progress
-            $this->uploadProgress = round(($index + 1) / $this->totalFiles * 50); // First 50% for extraction
+            $this->uploadProgress = round(($index + 1) / $this->totalFiles * 50);
             $this->processedFiles[] = $filePath;
         }
         
         // Now create resources from all files
-        $createdCount = $this->createResourcesFromFiles($allResourceFiles, $data, $finalCategoryId);
+        $createdCount = $this->createResourcesFromFiles($allResourceFiles, $data, $finalCategoryId, $this->bulkUpload);
+        
+        // Update bulk upload record
+        $this->bulkUpload->update([
+            'successful_uploads' => $createdCount,
+            'failed_uploads' => $failedCount + (count($allResourceFiles) - $createdCount),
+            'status' => 'completed',
+            'completed_at' => now()
+        ]);
         
         Notification::make()
             ->title('Bulk Upload Complete')
-            ->body("Successfully created {$createdCount} resources.")
+            ->body("Successfully created {$createdCount} resources from {$this->totalFiles} source files.")
             ->success()
             ->send();
         
@@ -338,63 +369,69 @@ class BulkUploadResources extends Page implements HasForms
         return $currentParentId;
     }
 
-    protected function createResourcesFromFiles($files, $data, $categoryId)
+    protected function createResourcesFromFiles($files, $data, $categoryId, $bulkUpload)
     {
         $createdCount = 0;
         $totalFiles = count($files);
         
         foreach ($files as $index => $fileInfo) {
-            $file = $fileInfo['path'];
-            $relativePath = $fileInfo['relative_path'];
-            $groupId = $fileInfo['group_id'];
-            
-            if (!file_exists($file)) {
-                Log::info("File not found: {$file}");
-                continue;
-            }
-            
-            $fileName = pathinfo($relativePath, PATHINFO_BASENAME);
-            $title = pathinfo($relativePath, PATHINFO_FILENAME);
-            $extension = pathinfo($relativePath, PATHINFO_EXTENSION);
-            
-            // Check if it's a valid resource file type
-            $validExtensions = ['pdf', 'doc', 'docx', 'epub', 'zip', 'jpg', 'jpeg', 'png', 'gif'];
-            if (!in_array(strtolower($extension), $validExtensions)) {
-                Log::info("Invalid file uploaded: {$file}");
-                continue; // Skip invalid file types
-            }
-            
-            // Move file to permanent location
-            $newPath = 'resources/' . $groupId . '/' .  Str::slug($title) .'_' .uniqid() . '.' . $extension;
-            $moved = Storage::disk('public')->put($newPath, file_get_contents($file));
-            
-            if ($moved) {
-                // Create resource with the selected category (deepest level)
-                $resource = Resource::create([
-                    'title' => $title,
-                    'slug' => Str::slug($title) . '-' . uniqid(),
-                    'description' => $fileName,
-                    'short_description' => $fileName,
-                    'group_id' => $groupId,
-                    'category_id' => $categoryId, // Use the deepest selected category
-                    'price' => $data['default_price'] ?? 0,
-                    'is_published' => $data['default_published'] ?? false,
-                    'requires_subscription' => $data['requires_subscription'] ?? false,
-                    'delivery_type' => 'upload',
-                    'file_path' => $newPath,
-                    'file_name' => $fileName,
-                    'file_size' => filesize($file),
-                ]);
+            try {
+                $file = $fileInfo['path'];
+                $relativePath = $fileInfo['relative_path'];
+                $groupId = $fileInfo['group_id'];
                 
-                $createdCount++;
+                if (!file_exists($file)) {
+                    Log::info("File not found: {$file}");
+                    continue;
+                }
+                
+                $fileName = pathinfo($relativePath, PATHINFO_BASENAME);
+                $title = pathinfo($relativePath, PATHINFO_FILENAME);
+                $extension = pathinfo($relativePath, PATHINFO_EXTENSION);
+                
+                // Check if it's a valid resource file type
+                $validExtensions = ['pdf', 'doc', 'docx', 'epub', 'zip', 'jpg', 'jpeg', 'png', 'gif'];
+                if (!in_array(strtolower($extension), $validExtensions)) {
+                    Log::info("Invalid file uploaded: {$file}");
+                    continue;
+                }
+                
+                // Move file to permanent location
+                $newPath = 'resources/' . $groupId . '/' . Str::slug($title) . '_' . uniqid() . '.' . $extension;
+                $moved = Storage::disk('public')->put($newPath, file_get_contents($file));
+                
+                if ($moved) {
+                    // Create resource with bulk upload tracking
+                    $resource = Resource::create([
+                        'title' => $title,
+                        'slug' => Str::slug($title) . '-' . uniqid(),
+                        'description' => $fileName,
+                        'short_description' => $fileName,
+                        'group_id' => $groupId,
+                        'category_id' => $categoryId,
+                        'bulk_upload_id' => $bulkUpload->id, // Link to bulk upload
+                        'price' => $data['default_price'] ?? 0,
+                        'is_published' => $data['default_published'] ?? false,
+                        'requires_subscription' => $data['requires_subscription'] ?? false,
+                        'delivery_type' => 'upload',
+                        'file_path' => $newPath,
+                        'file_name' => $fileName,
+                        'file_size' => filesize($file),
+                    ]);
+                    
+                    $createdCount++;
+                }
                 
                 // Update progress (50-100%)
                 $this->uploadProgress = 50 + round(($index + 1) / $totalFiles * 50);
+                
+            } catch (\Exception $e) {
+                Log::error("Failed to create resource from file: " . $e->getMessage());
             }
             
             // Clean up temp file
             if (strpos($file, 'extracted/') !== false) {
-                unlink($file);
+                @unlink($file);
             }
         }
         

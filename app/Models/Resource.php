@@ -7,9 +7,10 @@ use App\Models\UserDownload;
 use App\Models\Order;
 use App\Models\MembershipPackage;
 use App\Models\ResourceGroup;
+use Illuminate\Support\Facades\Storage;
 
 class Resource extends Model
-{
+{    
     protected $fillable = [
         'title',
         'slug',
@@ -17,6 +18,7 @@ class Resource extends Model
         'short_description',
         'category_id',
         'group_id',
+        'bulk_upload_id', // Add this if you have it
         'language',
         'author',
         'publisher',
@@ -56,7 +58,8 @@ class Resource extends Model
         'discount_price' => 'decimal:2',
         'page_count' => 'integer',
         'sort_order' => 'integer',
-        'download_count' => 'integer'
+        'download_count' => 'integer',
+        'deleted_at' => 'datetime',
     ];
 
     static $delivery_type_upload = 'upload';
@@ -87,6 +90,11 @@ class Resource extends Model
     {
         return $this->belongsTo(ResourceGroup::class);
     }
+    
+    public function bulkUpload()
+    {
+        return $this->belongsTo(BulkUpload::class, 'bulk_upload_id');
+    }
 
     public function scopeFeatured($query)
     {
@@ -113,5 +121,74 @@ class Resource extends Model
         }
         
         return round($bytes, 2) . ' ' . $units[$i];
+    }
+    
+    /**
+     * Delete all associated files from storage
+     */
+    public function deleteFiles(): void
+    {
+        $disk = Storage::disk('public');
+        
+        // Delete main file
+        if ($this->file_path && $disk->exists($this->file_path)) {
+            $disk->delete($this->file_path);
+        }
+        
+        // Delete preview file
+        if ($this->preview_file_path && $disk->exists($this->preview_file_path)) {
+            $disk->delete($this->preview_file_path);
+        }
+        
+        // Delete thumbnail
+        if ($this->thumbnail && $disk->exists($this->thumbnail)) {
+            $disk->delete($this->thumbnail);
+        }
+        
+        // Delete cover image
+        if ($this->cover_image && $disk->exists($this->cover_image)) {
+            $disk->delete($this->cover_image);
+        }
+        
+        // Delete any directories that might be empty
+        $this->cleanupEmptyDirectories();
+    }
+    
+    /**
+     * Clean up empty directories after file deletion
+     */
+    protected function cleanupEmptyDirectories(): void
+    {
+        $disk = Storage::disk('public');
+        
+        $directories = [
+            dirname($this->file_path),
+            dirname($this->preview_file_path),
+            dirname($this->thumbnail),
+            dirname($this->cover_image),
+        ];
+        
+        foreach (array_unique($directories) as $directory) {
+            if ($directory && $directory !== '.' && $directory !== 'resources') {
+                $files = $disk->files($directory);
+                $directories = $disk->directories($directory);
+                
+                if (empty($files) && empty($directories)) {
+                    $disk->deleteDirectory($directory);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Boot the model
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::deleting(function ($resource) {
+            $resource->deleteFiles();
+        });        
     }
 }
