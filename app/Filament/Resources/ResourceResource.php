@@ -395,7 +395,6 @@ class ResourceResource extends FilamentResource
                     
                 Tables\Columns\TextColumn::make('group.full_path')
                     ->label('Group')
-                    ->searchable()
                     ->sortable()
                     ->badge()
                     ->color('warning')
