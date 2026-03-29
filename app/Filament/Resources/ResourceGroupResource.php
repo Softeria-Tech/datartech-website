@@ -136,8 +136,7 @@ class ResourceGroupResource extends Resource
                 Tables\Columns\TextColumn::make('full_path')
                     ->label('Path')
                     ->color('gray')
-                    ->size('sm')
-                    ->searchable(),
+                    ->size('sm'),
                     
                 Tables\Columns\TextColumn::make('resources_count')
                     ->label('Resources')

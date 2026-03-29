@@ -234,7 +234,7 @@ class BulkUploadResources extends Page implements HasForms
             'group_id' => $data['group_id'],
             'uploaded_by' => auth()->id(),
             'total_files' => $this->totalFiles,
-            'price'=>$data['price'],
+            'price'=>$data['default_price'],
             'status' => 'processing',
             'metadata' => [
                 'upload_type' => 'bulk',

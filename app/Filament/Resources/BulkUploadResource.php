@@ -302,15 +302,13 @@ class BulkUploadResource extends Resource
                     ->label('ID')
                     ->sortable(),
                     
-                Tables\Columns\TextColumn::make('category.name')
+                Tables\Columns\TextColumn::make('category.path')
                     ->label('Category')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
                     
                 Tables\Columns\TextColumn::make('group.full_path')
                     ->label('Group')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('price')
                     ->formatStateUsing(function ($state) {
