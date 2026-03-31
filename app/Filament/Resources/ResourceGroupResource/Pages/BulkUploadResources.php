@@ -41,8 +41,10 @@ class BulkUploadResources extends Page implements HasForms
     public $selectedParentCategory = null;
     public $selectedSubCategory = null;
     public $selectedGrandCategory = null;
+    public $selected4thDegreeCategory = null;
     public $subCategories = [];
     public $grandCategories = [];
+    public $subCategories4degree = [];
 
     public function mount(): void
     {
@@ -139,8 +141,30 @@ class BulkUploadResources extends Page implements HasForms
                                     ->reactive()
                                     ->afterStateUpdated(function ($state) {
                                         $this->selectedGrandCategory = $state;
+                                        $this->selected4thDegreeCategory = null;
+                                        $this->subCategories4degree = [];
+                                        
+                                        if ($state) {
+                                            $this->subCategories4degree = Category::where('parent_id', $state)
+                                                ->orderBy('name')
+                                                ->get()
+                                                ->pluck('name', 'id')
+                                                ->toArray();
+                                        }
                                     })
                                     ->helperText('Optional: Select a grand category'),
+
+                                    // Grand Category (Optional)
+                                Components\Select::make('4th_degree_category_id')
+                                    ->label('4th Degree Category')
+                                    ->options(function () {
+                                        return $this->subCategories4degree;
+                                    })
+                                    ->reactive()
+                                    ->afterStateUpdated(function ($state) {
+                                        $this->selected4thDegreeCategory = $state;
+                                    })
+                                    ->helperText('Optional: Select a 4th degree category'),
                                     
                                 Components\TextInput::make('default_price')
                                     ->label('Default Price (Ksh)')
@@ -190,6 +214,11 @@ class BulkUploadResources extends Page implements HasForms
 
     protected function getFinalCategoryId(): ?int
     {
+
+        if ($this->selected4thDegreeCategory) {
+            return $this->selected4thDegreeCategory;
+        }
+        
         if ($this->selectedGrandCategory) {
             return $this->selectedGrandCategory;
         }

@@ -91,7 +91,6 @@ class BulkUploadResource extends Resource
                                     ->numeric()
                                     ->badge()
                                     ->color('danger'),
-                                    
                                 TextEntry::make('status')
                                     ->label('Status')
                                     ->badge()
@@ -185,7 +184,7 @@ class BulkUploadResource extends Resource
                                         ->send();
                                         
                                     // Refresh the infolist
-                                    $this->dispatch('refresh');
+                                    //$this->dispatch('refresh');
                                 }),
                                 
                             \Filament\Infolists\Components\Actions\Action::make('update_group_batch')
@@ -217,7 +216,7 @@ class BulkUploadResource extends Resource
                                         ->send();
                                         
                                     // Refresh the infolist
-                                    $this->dispatch('refresh');
+                                    //$this->dispatch('refresh');
                                 }),
 
                             \Filament\Infolists\Components\Actions\Action::make('update_price_batch')
@@ -250,7 +249,7 @@ class BulkUploadResource extends Resource
                                         ->send();
                                         
                                     // Refresh the infolist
-                                    $this->dispatch('refresh');
+                                    //$this->dispatch('refresh');
                                 }),
                                 
                             \Filament\Infolists\Components\Actions\Action::make('delete_all_resources')
@@ -275,7 +274,7 @@ class BulkUploadResource extends Resource
                                         ->send();
                                         
                                     // Refresh the infolist
-                                    $this->dispatch('refresh');
+                                    //$this->dispatch('refresh');
                                 }),
                                 
                             \Filament\Infolists\Components\Actions\Action::make('view_all_resources')
