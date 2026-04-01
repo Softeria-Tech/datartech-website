@@ -52,7 +52,6 @@ class ResourceGroupResource extends Resource
                                             
                                         Forms\Components\Select::make('parent_id')
                                             ->label('Parent Group')
-                                            ->relationship('parent', 'name')
                                             ->searchable()
                                             ->preload()
                                             ->options(function () {
