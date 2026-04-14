@@ -309,8 +309,8 @@ class SubscriptionResource extends Resource
                     ->sortable()
                     ->formatStateUsing(fn ($state, $record) => 
                         $record->download_limit 
-                            ? "{$state} / {$record->download_limit}"
-                            : "{$state} / ထ"
+                            ? "{$record->download_usage} / {$record->download_limit}"
+                            : "{$record->download_usage} / ထ"
                     )
                     ->badge()
                     ->color(fn ($record) => 

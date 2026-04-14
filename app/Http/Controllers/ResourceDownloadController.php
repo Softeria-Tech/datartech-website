@@ -117,12 +117,12 @@ class ResourceDownloadController extends Controller
 
         $user = Auth::user();
 
-        $resource->download_count++;
+        $resource->download_count = $resource->download_count + 1;
         $resource->save();
 
         $userDownload = $user->downloads()->where('resource_id', $resource->id)->first();
         if ($userDownload) {
-            $userDownload->download_count++;
+            $userDownload->download_count = $userDownload->download_count + 1;
             $userDownload->downloaded_at = now();
             $userDownload->save();
         } else {

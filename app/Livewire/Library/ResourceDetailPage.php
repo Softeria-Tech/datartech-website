@@ -223,7 +223,7 @@ class ResourceDetailPage extends Component
             }
         }
         
-        Log::info($this->resource->title . ': Resource not available for download');
+        Log::info($this->resource->title . '::getDownloadUrl:: Resource not available for download');
         return '#';
     }
 

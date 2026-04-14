@@ -59,8 +59,7 @@ class ViewUserDownload extends ViewRecord
                                 TextEntry::make('user_agent')
                                     ->label('Device / Browser')
                                     ->limit(50)
-                                    ->tooltip(fn ($record) => $record->user_agent)
-                                    ->toggleable(),
+                                    ->tooltip(fn ($record) => $record->user_agent),
                             ]),
                     ]),
                 

@@ -10,7 +10,6 @@ use App\Models\MembershipPackage;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-use RoundingMode;
 
 class Subscription extends Model
 {
@@ -150,28 +149,28 @@ class Subscription extends Model
 
     public function getDownloadUsageAttribute()
     {
-        //Log::info('getDownloadUsageAttribute');
         $today = Carbon::today();
+        $endDate = $this->ends_at ? $this->ends_at : Carbon::today()->addYear();
+
+        if ($today->greaterThan($endDate)) {
+            $today = $endDate;
+        }
+
         $startOfSubscription = $this->starts_at;
-
-        // 1. Calculate how many full months have passed since the start
         $monthsElapsed = $startOfSubscription->diffInMonths($today);
-
-        // 2. Define the start of the "Current Billing Month"
-        // e.g., If started Jan 15, and today is March 20, 
-        // this becomes Jan 15 + 2 months = March 15.
-        $currentMonthStart = $startOfSubscription->copy()->addMonths($monthsElapsed);
-
-        // 3. Define the end of this billing cycle (one month after the current start)
-        $currentMonthEnd = $currentMonthStart->copy()->addMonth()->subDay();
+        $currentMonthStart = $startOfSubscription->copy()->addMonths($monthsElapsed)->startOfDay();
+        $currentMonthEnd = $currentMonthStart->copy()->addMonth()->subDay()->endOfDay();
 
         $this->tracker_start_date = $currentMonthStart;
         $this->tracker_end_date = $currentMonthEnd->addDay();
 
-        return DownloadTracker::query()
+        $sum= DownloadTracker::query()
             ->where('user_id', $this->user_id)
             ->whereBetween('date', [$currentMonthStart, $currentMonthEnd])
-            ->sum('downloads'); // Added sum() assuming you want the total count
+            ->sum('downloads');
+
+        Log::info('Download usage calculated', ['user_id' => $this->user_id, 'start_date' => $currentMonthStart, 'end_date' => $currentMonthEnd, 'downloads' => $sum]);
+        return $sum;
     }
 
     public function getTrackerStartDateAttribute()

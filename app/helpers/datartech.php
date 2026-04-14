@@ -31,12 +31,12 @@ if (!function_exists('trackDownload')) {
         $currentResources[] = $rid;
         $tracker->resources = $currentResources;
 
-        $tracker->downloads++;
+        $tracker->downloads=($tracker->downloads ?? 0) + 1;
         $tracker->save();
 
         $active = Auth::user()->activeSubscription()->first();
         if ($active) {
-            $active->downloads_used++;
+            $active->downloads_used=($active->downloads_used ?? 0) + 1;
             $active->save();
         }
     }
