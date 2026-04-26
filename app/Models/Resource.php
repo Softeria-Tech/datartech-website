@@ -191,4 +191,40 @@ class Resource extends Model
             $resource->deleteFiles();
         });        
     }
+
+    public function getFinalPrice(): float
+    {
+        if ($this->discount_price && (!$this->discount_ends_at || $this->discount_ends_at->isFuture())) {
+            return (float) $this->discount_price;
+        }
+        
+        return (float) ($this->price ?? 0);
+    }
+
+    public function canUserAccess($user = null): bool
+    {
+        if (!$this->requires_subscription && ($this->price == 0 || $this->price === null)) {
+            return true;
+        }
+        
+        if (!$user) {
+            return false;
+        }
+        
+        // Check if purchased
+        if ($this->orders()->where('user_id', $user->id)->where('payment_status', 'paid')->exists()) {
+            return true;
+        }
+        
+        // Check subscription
+        $subscription = $user->activeSubscription()->first();
+        if ($subscription && $subscription->membershipPackage) {
+            $allowedCategories = $subscription->membershipPackage->allowed_categories;
+            if (empty($allowedCategories) || in_array($this->category_id, $allowedCategories)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
 }

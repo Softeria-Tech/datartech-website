@@ -78,7 +78,7 @@ class BulkUploadResources extends Page implements HasForms
                                             ]);
                                     })
                                     ->required()
-                                    ->default($this->record->id),
+                                    ->searchable(),
 
                                 // Parent Category (Required)
                                 Components\Select::make('parent_category_id')
