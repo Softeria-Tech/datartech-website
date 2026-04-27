@@ -22,3 +22,4 @@ yarn-error.log
 /.zed
 /public/uploads/
 /storage/notifications-admin.json
+*.zip

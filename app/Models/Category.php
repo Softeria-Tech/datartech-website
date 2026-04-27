@@ -106,6 +106,11 @@ class Category extends Model
         return $ancestors;
     }
 
+    public function getResourceCountAttribute()
+    {
+        return $this->resources->count();
+    }
+
     /**
      * Get full path (breadcrumb).
      */

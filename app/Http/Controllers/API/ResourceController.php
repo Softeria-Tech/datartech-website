@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ResourceResource;
 use App\Models\Resource;
+use App\Models\ResourceGroup;
 use App\Models\UserDownload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -187,5 +188,58 @@ class ResourceController extends Controller
                 'downloads' => DB::raw('downloads + 1'),
             ]
         );
+    }
+
+    /**
+     * Get resources by group ID
+     */
+    public function byGroup(Request $request, $groupId)
+    {
+        $group = ResourceGroup::findOrFail($groupId);
+        
+        // Get resources in this group
+        $resources = $group->resources()
+            ->published()
+            ->with(['category', 'membershipPackages'])
+            ->orderBy('sort_order')
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 15));
+        
+        return ResourceResource::collection($resources);
+    }
+
+    /**
+     * Get resources by group slug
+     */
+    public function byGroupSlug(Request $request, $slug)
+    {
+        $group = ResourceGroup::where('slug', $slug)->firstOrFail();
+        
+        $resources = $group->resources()
+            ->published()
+            ->with(['category', 'membershipPackages'])
+            ->orderBy('sort_order')
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 15));
+        
+        return ResourceResource::collection($resources);
+    }
+
+    /**
+     * Get resources from a group and all its subgroups
+     */
+    public function byGroupWithDescendants(Request $request, $groupId)
+    {
+        $group = ResourceGroup::findOrFail($groupId);
+        $groupIds = $group->getAllDescendantIds();
+        
+        $resources = Resource::whereIn('group_id', $groupIds)
+            ->published()
+            ->with(['category', 'membershipPackages'])
+            ->orderBy('sort_order')
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 15));
+        
+        return ResourceResource::collection($resources);
     }
 }
