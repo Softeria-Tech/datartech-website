@@ -10,7 +10,6 @@ use App\Models\UserDownload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ResourceController extends Controller
 {
@@ -47,9 +46,15 @@ class ResourceController extends Controller
         // Sorting
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        
+        $allowedSortFields = ['title', 'price', 'created_at', 'updated_at', 'download_count', 'published_date'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
 
-        $resources = $query->paginate($request->get('per_page', 15));
+        $resources = $query->paginate($request->get('per_page', 20));
 
         return ResourceResource::collection($resources);
     }
@@ -80,115 +85,11 @@ class ResourceController extends Controller
 
     public function download(Request $request, $id)
     {
-        $user = $request->user();
         $resource = Resource::findOrFail($id);
 
-        // Check if user can download
-        if (!$this->canDownloadResource($user, $resource)) {
-            return response()->json([
-                'message' => 'You do not have permission to download this resource.',
-            ], 403);
-        }
-
-        // Check download limits for subscription users
-        if ($user && $user->activeSubscription) {
-            $subscription = $user->activeSubscription()->first();
-            
-            if (!$subscription->canDownload()) {
-                return response()->json([
-                    'message' => 'You have reached your download limit for this period.',
-                ], 429);
-            }
-        }
-
-        // Get file path
-        $filePath = $resource->file_path;
-        
-        if (!$filePath || !Storage::disk('public')->exists($filePath)) {
-            return response()->json([
-                'message' => 'File not found.',
-            ], 404);
-        }
-
-        // Track download
-        $this->trackDownload($user, $resource);
-
-        // Return file download
-        $fullPath = Storage::disk('public')->path($filePath);
-        $fileName = $resource->file_name ?? $resource->slug . '.pdf';
-
-        return response()->download($fullPath, $fileName, [
-            'Content-Type' => 'application/octet-stream',
-        ]);
+        return app('Http\Controllers\ResourceDownloadController')->download($request, $resource->slug);
     }
 
-    private function canDownloadResource($user, Resource $resource): bool
-    {
-        // Free resource
-        if (!$resource->requires_subscription && ($resource->price == 0 || $resource->price === null)) {
-            return true;
-        }
-
-        if (!$user) {
-            return false;
-        }
-
-        // Check if user purchased this resource
-        $hasPurchased = $resource->orders()
-            ->where('user_id', $user->id)
-            ->where('payment_status', 'paid')
-            ->exists();
-
-        if ($hasPurchased) {
-            return true;
-        }
-
-        // Check subscription access
-        $subscription = $user->activeSubscription()->first();
-        if ($subscription && $subscription->membershipPackage) {
-            $allowedCategories = $subscription->membershipPackage->allowed_categories;
-            if (empty($allowedCategories) || in_array($resource->category_id, $allowedCategories)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function trackDownload($user, Resource $resource)
-    {
-        // Update resource download count
-        $resource->increment('download_count');
-
-        if (!$user) {
-            return;
-        }
-
-        // Record user download
-        UserDownload::create([
-            'user_id' => $user->id,
-            'resource_id' => $resource->id,
-            'downloaded_at' => now(),
-            'ip_address' => request()->ip(),
-        ]);
-
-        // Update subscription download usage
-        $subscription = $user->activeSubscription()->first();
-        if ($subscription) {
-            $subscription->increment('downloads_used');
-        }
-
-        // Track in download tracker
-        \App\Models\DownloadTracker::updateOrCreate(
-            [
-                'user_id' => $user->id,
-                'date' => now()->toDateString(),
-            ],
-            [
-                'downloads' => DB::raw('downloads + 1'),
-            ]
-        );
-    }
 
     /**
      * Get resources by group ID

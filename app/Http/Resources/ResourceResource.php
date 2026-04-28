@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class ResourceResource extends JsonResource
 {
@@ -92,8 +93,8 @@ class ResourceResource extends JsonResource
             return $this->external_url;
         }
         
-        if (in_array($this->delivery_type, ['upload', 'both']) && $this->file_path) {
-            return url('/api/resources/' . $this->id . '/download');
+        if (in_array($this->delivery_type, ['upload']) && $this->file_path) {
+            return Storage::url($this->resource->file_path);
         }
         
         return null;

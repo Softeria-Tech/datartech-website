@@ -33,7 +33,7 @@ Route::prefix('resources')->group(function () {
     Route::get('/', [ResourceController::class, 'index']);
     Route::get('/featured', [ResourceController::class, 'featured']);
     Route::get('/random', [ResourceController::class, 'random']);
-    Route::get('/{id}', [ResourceController::class, 'show']);
+    Route::get('/{id}', [ResourceController::class, 'show'])->where('id','[0-9]+');
 
     // Get resources by group
     Route::get('/group/{groupId}', [ResourceController::class, 'byGroup']);

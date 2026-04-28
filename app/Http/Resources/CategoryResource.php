@@ -27,9 +27,9 @@ class CategoryResource extends JsonResource
             'children' => CategoryResource::collection($this->whenLoaded('children')),
             'path' => $this->path,
             'full_path' => $this->full_path,
-            'resources_count' => $this->resources_count,
+            'resources_count' => $this->resources()->count(),
             'meta_title' => $this->meta_title,
-            'meta_description' => $this->meta_description,
+            'meta_description' => $this->meta_description
         ];
     }
 }
