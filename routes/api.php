@@ -32,7 +32,13 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::prefix('resources')->group(function () {
     Route::get('/', [ResourceController::class, 'index']);
     Route::get('/featured', [ResourceController::class, 'featured']);
+    Route::get('/random', [ResourceController::class, 'random']);
     Route::get('/{id}', [ResourceController::class, 'show']);
+
+    // Get resources by group
+    Route::get('/group/{groupId}', [ResourceController::class, 'byGroup']);
+    Route::get('/group-slug/{slug}', [ResourceController::class, 'byGroupSlug']);
+    Route::get('/group-with-descendants/{groupId}', [ResourceController::class, 'byGroupWithDescendants']);
 });
 
 //Categories
@@ -95,9 +101,4 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/membership/my-subscription', [MembershipController::class, 'mySubscription']);
     Route::post('/membership/subscribe', [MembershipController::class, 'subscribe']);
     Route::post('/membership/cancel', [MembershipController::class, 'cancelSubscription']);
-
-    // Get resources by group
-    Route::get('/group/{groupId}', [ResourceController::class, 'byGroup']);
-    Route::get('/group-slug/{slug}', [ResourceController::class, 'byGroupSlug']);
-    Route::get('/group-with-descendants/{groupId}', [ResourceController::class, 'byGroupWithDescendants']);
 });

@@ -242,4 +242,16 @@ class ResourceController extends Controller
         
         return ResourceResource::collection($resources);
     }
+
+    public function random(Request $request)
+    {
+        $limit = $request->get('limit', 10);
+        
+        $resources = Resource::where('is_published', true)
+            ->inRandomOrder()
+            ->limit($limit)
+            ->get();
+        
+        return ResourceResource::collection($resources);
+    }
 }
