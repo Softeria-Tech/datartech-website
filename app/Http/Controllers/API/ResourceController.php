@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\ResourceDownloadController;
 use App\Http\Resources\ResourceResource;
 use App\Models\Resource;
 use App\Models\ResourceGroup;
@@ -87,7 +88,8 @@ class ResourceController extends Controller
     {
         $resource = Resource::findOrFail($id);
 
-        return app('Http\Controllers\ResourceDownloadController')->download($request, $resource->slug);
+        $controller = resolve(ResourceDownloadController::class);
+        return $controller->download($request, $resource->slug);
     }
 
 
