@@ -16,7 +16,6 @@ class ResourceResource extends JsonResource
         if(!$user){
             $user = Auth::user();
         }
-        Log::info("user:".json_encode($user));
         
         $canAccess = $this->canUserAccess($user);
         

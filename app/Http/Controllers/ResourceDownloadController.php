@@ -40,12 +40,18 @@ class ResourceDownloadController extends Controller
             $isFree = $resource->price == 0;
             
             if (!$hasPurchased && !$isSubscribed && !$isFree) {
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => 'You have not purchased this resource.'], 403);
+                }
                 abort(403, 'You have not purchased this resource.');
             }
             
             // Check download limits
             $limitReached = hasHitDownloadLimit($resource->id);
             if ($limitReached) {
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => $limitReached], 403);
+                }
                 abort(403, $limitReached);
             }
             
@@ -56,6 +62,9 @@ class ResourceDownloadController extends Controller
                 $filePath = $resource->file_path;
                 
                 if (!Storage::disk('public')->exists($filePath)) {
+                    if ($request->wantsJson()) {
+                        return response()->json(['error' => 'File not found. Please contact support.'], 404);
+                    }
                     abort(404, 'File not found. Please contact support.');
                 }
                 
