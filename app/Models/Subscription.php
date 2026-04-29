@@ -169,7 +169,7 @@ class Subscription extends Model
             ->whereBetween('date', [$currentMonthStart, $currentMonthEnd])
             ->sum('downloads');
 
-        Log::info('Download usage calculated', ['user_id' => $this->user_id, 'start_date' => $currentMonthStart, 'end_date' => $currentMonthEnd, 'downloads' => $sum]);
+        //Log::info('Download usage calculated', ['user_id' => $this->user_id, 'start_date' => $currentMonthStart, 'end_date' => $currentMonthEnd, 'downloads' => $sum]);
         return $sum;
     }
 
