@@ -17,7 +17,8 @@ $app= Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'verify.phone' => PhoneVerifiedMiddleware::class
+            'verify.phone' => PhoneVerifiedMiddleware::class,
+            'optional.sanctum' => \App\Http\Middleware\OptionalSanctumAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
