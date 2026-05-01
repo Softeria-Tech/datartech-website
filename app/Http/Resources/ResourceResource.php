@@ -5,7 +5,6 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ResourceResource extends JsonResource
@@ -63,6 +62,7 @@ class ResourceResource extends JsonResource
             
             // Membership packages
             'membership_packages' => MembershipPackageResource::collection($this->whenLoaded('membershipPackages')),
+            'views'=>$this->views
         ];
     }
     

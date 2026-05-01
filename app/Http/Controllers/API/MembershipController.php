@@ -32,11 +32,7 @@ class MembershipController extends Controller
 
     public function mySubscription(Request $request)
     {
-        $subscription = $request->user()
-            ->subscriptions()
-            ->with('membershipPackage')
-            ->latest()
-            ->first();
+        $subscription = $request->user()->activeSubscription()->first();
 
         if (!$subscription) {
             return response()->json([

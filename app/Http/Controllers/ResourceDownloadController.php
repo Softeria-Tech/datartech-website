@@ -50,7 +50,8 @@ class ResourceDownloadController extends Controller
             $limitReached = hasHitDownloadLimit($resource->id);
             if ($limitReached) {
                 if ($request->wantsJson()) {
-                    return response()->json(['error' => $limitReached], 403);
+                    $msg = strip_tags(str_replace(['<br>','<br\>'], "\n", $limitReached));
+                    return response()->json(['error' => $msg], 403);
                 }
                 abort(403, $limitReached);
             }

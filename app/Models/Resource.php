@@ -45,7 +45,8 @@ class Resource extends Model
         'is_published',
         'featured',
         'sort_order',
-        'download_count'
+        'download_count',
+        'views'
     ];
 
     protected $casts = [

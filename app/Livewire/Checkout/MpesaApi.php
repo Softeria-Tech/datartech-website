@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Checkout;
 
-use Illuminate\Support\Facades\Http;
+use App\Libs\MpesaGateway;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
@@ -18,26 +18,26 @@ abstract class MpesaApi extends Component
     // STK Push Timer
     public $timerSeconds = 60;
     public $showTimer = false;
-
-    // M-PESA Payment Gateway
-    public $mpesaApiUrl = 'https://sandbox.safaricom.co.ke/';
-    public $mpesaEnv = 'sandbox'; // or 'production'
+    
     public $showStkPushForm = true;
+
+    /**
+     * MpesaGateway
+     */
+    protected $mpesaGateway;
+    
 
     public function initiateGateway()
     {
-        $this->mpesaEnv = env('MPESA_ENVIRONMENT', 'sandbox');
-        $this->mpesaApiUrl = $this->mpesaEnv === 'production'
-            ? 'https://api.safaricom.co.ke/'
-            : 'https://sandbox.safaricom.co.ke/';
+        $this->mpesaGateway = new MpesaGateway();
         if ($this->mpesaEnv === 'sandbox' && in_array(strtolower(env('APP_ENV')), ['production', 'staging', 'live'])) {
             $this->showStkPushForm = false;
         }
     }
 
-    public function initiateMpesaPayment()
+     public function initiateMpesaPayment()
     {
-        $this->validate([
+        request()->validate([
             'mpesaPhone' => 'required|regex:/^[0-9]{10,12}$/',
         ], [
             'mpesaPhone.required' => 'Please enter your M-PESA phone number',
@@ -52,10 +52,10 @@ abstract class MpesaApi extends Component
         $user->phone = $this->mpesaPhone;
         $user->save();
 
-        $phone = $this->formatMpesaPhone($this->mpesaPhone);
+        $phone = $this->mpesaGateway->formatMpesaPhone($this->mpesaPhone);
         
         try {
-            $response = $this->stkPush($phone, $this->order->total);
+            $response = $this->mpesaGateway->stkPush($phone, $this->order->total,$this->order->order_number);
             Log::info('M-PESA STK Push Response'. json_encode(['response' => $response, 'phone' => $phone, 'amount' => $this->order->total]));
             if ($response['success']) {
                 $this->order->update([
@@ -85,117 +85,6 @@ abstract class MpesaApi extends Component
             ]);
             Log::emergency('M-PESA Api Exception', ['exception' => $e]);
         }
-    }
-
-    public function formatMpesaPhone($phone)
-    {
-        $phone = preg_replace('/[^0-9]/', '', $phone);
-        
-        if (substr($phone, 0, 1) === '0') {
-            $phone = '254' . substr($phone, 1);
-        } elseif (substr($phone, 0, 1) === '7') {
-            $phone = '254' . $phone;
-        }
-        
-        return $phone;
-    }
-
-    public function stkPush($phone, $amount)
-    {
-        $partnerName = env('SOFTERIA_WALLET_SECRET', 'datartech2021');
-        $baseUrl = env('SOFTERIA_WALLET_URL', 'https://billing.softeriatech.com/api/v1/');
-        $url = $baseUrl . 'partner/checkout';
-
-        $callbackUrl = route('mpesa.callback',['order'=>$this->order->order_number]);
-        //$callbackUrl = 'https://6e7d-102-217-127-98.ngrok-free.app/api/mpesa/callback?order=' . $this->order->order_number;
-
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $partnerName,
-                'Content-Type' => 'application/json',
-            ])->post($url, [
-                'phone' => $phone,
-                'amount' => round($amount),
-                'callback' => $callbackUrl,
-                'username' => $partnerName,
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                return [
-                    'success' => true,
-                    'transaction_id' => $data['transaction_id'] ?? null,
-                    'message' => 'STK Push sent successfully',
-                ];
-            }
-        } catch (\Exception $e) {
-            Log::error('Softeria Wallet STK Push Failed', ['response' => $response->json(), 'error' => $e->getMessage()]);
-            return [
-                'success' => false,
-                'message' => 'Failed to initiate M-PESA payment',
-            ];
-        }
-    }
-
-    public function stkPushOld($phone, $amount)
-    {
-        $businessShortCode = env('MPESA_BUSINESS_SHORTCODE');
-        $passkey = env('MPESA_PASSKEY');
-        $timestamp = date('YmdHis');
-        $password = base64_encode($businessShortCode . $passkey . $timestamp);
-        //$callbackUrl = route('mpesa.callback');
-        $callbackUrl = 'https://260f-102-217-127-105.ngrok-free.app/api/mpesa/callback';
-        
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->getMpesaAccessToken(),
-                'Content-Type' => 'application/json',
-            ])->post('https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest', [
-                'BusinessShortCode' => $businessShortCode,
-                'Password' => $password,
-                'Timestamp' => $timestamp,
-                'TransactionType' => 'CustomerPayBillOnline',
-                'Amount' => round($amount),
-                'PartyA' => $phone,
-                'PartyB' => $businessShortCode,
-                'PhoneNumber' => $phone,
-                'CallBackURL' => $callbackUrl,
-                'AccountReference' => $this->order->order_number,
-                'TransactionDesc' => $this->getPaymentDescription(),
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                return [
-                    'success' => true,
-                    'transaction_id' => $data['CheckoutRequestID'] ?? null,
-                    'message' => 'STK Push sent successfully',
-                ];
-            }
-
-            Log::error('M-PESA STK Push Failed', ['response' => $response->json()]);
-            return [
-                'success' => false,
-                'message' => 'Failed to initiate M-PESA payment',
-            ];
-        } catch (\Exception $e) {
-            Log::error('M-PESA Exception', ['error' => $e->getMessage()]);
-            return [
-                'success' => false,
-                'message' => 'M-PESA service unavailable',
-            ];
-        }
-    }
-
-    public function getMpesaAccessToken()
-    {
-        $consumerKey = env('MPESA_CONSUMER_KEY');
-        $consumerSecret = env('MPESA_CONSUMER_SECRET');
-        
-        $response = Http::withBasicAuth($consumerKey, $consumerSecret)
-            ->get('https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials');
-        
-        return $response->json()['access_token'] ?? null;
     }
 
 

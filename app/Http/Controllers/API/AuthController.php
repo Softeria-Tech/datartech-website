@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\SubscriptionResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -36,6 +37,7 @@ class AuthController extends Controller
             'user' => new UserResource($user),
             'access_token' => $token,
             'token_type' => 'Bearer',
+            'subscription' => null,
         ], 201);
     }
 
@@ -69,7 +71,18 @@ class AuthController extends Controller
             'user' => new UserResource($user),
             'access_token' => $token,
             'token_type' => 'Bearer',
+            'subscription'=>$this->getUserSubscriptionData($user),
         ]);
+    }
+
+    private function getUserSubscriptionData(User $user){
+        $subscriptionData = null;
+        $activeSubscription = $user->activeSubscription()->first();
+        if ($activeSubscription) {
+            $subscriptionData = new SubscriptionResource($activeSubscription);
+        }
+
+        return $subscriptionData;
     }
 
     public function logout(Request $request)

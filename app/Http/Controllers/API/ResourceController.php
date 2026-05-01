@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
+use function PHPUnit\Framework\isBool;
+
 class ResourceController extends Controller
 {
     public function index(Request $request)
@@ -66,11 +68,19 @@ class ResourceController extends Controller
             ->orWhere('slug', $id)
             ->with(['category', 'membershipPackages', 'group'])
             ->firstOrFail();
+        
+        $resource->increment('views');
+        $limitReached = hasHitDownloadLimit($resource->id);
+        $limitMsg = null;
 
-        // Increment view count or track
-        // $resource->increment('view_count');
+        if($limitReached)
+            $limitMsg = strip_tags(str_replace(['<br>','<br\>'], "\n", $limitReached));
 
-        return new ResourceResource($resource);
+        return (new ResourceResource($resource))
+            ->additional([
+                'limit_msg' => $limitMsg,
+                'limit_reached' => empty($limitReached)?false:true
+            ]);
     }
 
     public function featured(Request $request)

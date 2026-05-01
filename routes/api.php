@@ -94,9 +94,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     
     // Orders
     Route::get('/orders', [OrderController::class, 'index']);
+    Route::post('/orders', [OrderController::class, 'create']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
-    Route::post('/orders/purchase', [OrderController::class, 'purchase']);
-    Route::post('/orders/payment-callback', [OrderController::class, 'paymentCallback']);
+    Route::post('/orders/initiate-payment', [OrderController::class, 'initiatePayment']);
     
     // Membership
     Route::get('/membership/my-subscription', [MembershipController::class, 'mySubscription']);

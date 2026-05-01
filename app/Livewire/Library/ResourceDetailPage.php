@@ -52,8 +52,8 @@ class ResourceDetailPage extends Component
             ->where('is_published', true)
             ->firstOrFail();
 
-        // Increment view count if you have one
-        // $this->resource->increment('views');
+        
+        $this->resource->increment('views');
         
         $this->loadRelatedResources();
     }
