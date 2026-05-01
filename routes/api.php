@@ -95,7 +95,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Orders
     Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/orders', [OrderController::class, 'create']);
-    Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->where('id','[0-9]+');
     Route::post('/orders/initiate-payment', [OrderController::class, 'initiatePayment']);
     
     // Membership

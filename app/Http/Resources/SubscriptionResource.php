@@ -13,7 +13,7 @@ class SubscriptionResource extends JsonResource
             'id' => $this->id,
             'user_id' => $this->user_id,
             'membership_package_id' => $this->membership_package_id,
-            'package' => new MembershipPackageResource($this->whenLoaded('membershipPackage')),
+            'package' => new MembershipPackageResource($this->membershipPackage),
             'name' => $this->name,
             'type' => $this->type,
             'plan' => $this->plan,

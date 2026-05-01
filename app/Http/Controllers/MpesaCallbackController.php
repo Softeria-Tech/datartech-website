@@ -248,6 +248,7 @@ class MpesaCallbackController extends Controller
             // Payment failed
             $order->update([
                 'payment_status' => 'failed',
+                'order_status'=>'cancelled',
                 'order_data' => array_merge($order->order_data ?? [], [
                     'mpesa_error' => [
                         'code' => $resultCode,
