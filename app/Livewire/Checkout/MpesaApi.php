@@ -30,7 +30,7 @@ abstract class MpesaApi extends Component
     public function initiateGateway()
     {
         $this->mpesaGateway = new MpesaGateway();
-        if ($this->mpesaEnv === 'sandbox' && in_array(strtolower(env('APP_ENV')), ['production', 'staging', 'live'])) {
+        if ($this->mpesaGateway->mpesaEnv === 'sandbox' && in_array(strtolower(env('APP_ENV')), ['production', 'staging', 'live'])) {
             $this->showStkPushForm = false;
         }
     }

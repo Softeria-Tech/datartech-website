@@ -87,7 +87,7 @@ class DownloadsIndex extends Component
             ->with(['resource', 'order', 'membershipPackage'])
             ->when($this->search, function ($query) {
                 $query->whereHas('resource', function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
+                    $q->where('title', 'like', '%' . $this->search . '%')
                       ->orWhere('description', 'like', '%' . $this->search . '%');
                 });
             })

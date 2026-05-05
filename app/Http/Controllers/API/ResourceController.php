@@ -102,7 +102,6 @@ class ResourceController extends Controller
         return $controller->download($request, $resource->slug);
     }
 
-
     /**
      * Get resources by group ID
      */
