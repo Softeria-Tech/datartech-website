@@ -221,4 +221,11 @@ class ResourceGroup extends Model
                !is_null($this->parent?->parent_id) && 
                !is_null($this->parent?->parent?->parent_id);
     }
+
+    public static function getTree()
+    {
+        return self::with('children.children.children.children')
+            ->root()
+            ->get();
+    }
 }

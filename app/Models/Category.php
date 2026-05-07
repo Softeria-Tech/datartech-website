@@ -189,7 +189,7 @@ class Category extends Model
      */
     public static function getTree()
     {
-        return self::with('children.children')
+        return self::with('children.children.children.children')
             ->root()
             ->orderBy('sort_order')
             ->get();

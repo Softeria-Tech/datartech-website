@@ -16,7 +16,7 @@ class ResourceGroupController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ResourceGroup::with(['children']);
+        $query = ResourceGroup::with(['children.children.children.children']);
 
         // Filter by depth level
         if ($request->has('depth')) {
